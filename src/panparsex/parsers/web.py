@@ -43,11 +43,17 @@ class WebParser(ParserProtocol):
         count = 0
         session = requests.Session()
         session.headers.update({
-            "User-Agent": user_agent,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Cache-Control": "max-age=0",
         })
         
         while q and (not recursive or count == 0 or (recursive and count < max_links)):
@@ -59,8 +65,32 @@ class WebParser(ParserProtocol):
                 continue
                 
             try:
+                # Add referer for better compatibility
+                if depth > 0:
+                    session.headers.update({"Referer": start_url})
+                
                 r = session.get(url, timeout=15, allow_redirects=True)
                 ctype = r.headers.get("Content-Type", "")
+                
+                # Handle different response codes
+                if r.status_code == 403:
+                    # Try with different headers for 403 responses
+                    session.headers.update({
+                        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        "Referer": "https://www.google.com/",
+                    })
+                    r = session.get(url, timeout=15, allow_redirects=True)
+                
+                if r.status_code not in [200, 201, 202]:
+                    error_section = Section(
+                        heading=f"HTTP {r.status_code} for {url}",
+                        chunks=[Chunk(text=f"HTTP {r.status_code}: {r.reason}", order=count, meta={"error": True, "url": url, "status_code": r.status_code})],
+                        meta={"error": True, "url": url, "status_code": r.status_code}
+                    )
+                    doc.sections.append(error_section)
+                    count += 1
+                    continue
+                
                 if "text/html" not in ctype and depth > 0:
                     continue
                     

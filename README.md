@@ -21,7 +21,11 @@
 ## Installation
 
 ```bash
+# Basic installation
 pip install panparsex
+
+# With Selenium support for JavaScript-heavy websites
+pip install panparsex[selenium]
 ```
 
 ## Quick Start
@@ -46,6 +50,12 @@ panparsex parse document.pdf --ai-process --ai-output analysis.json --output par
 
 # Parse website with AI analysis (no terminal output)
 panparsex parse https://example.com --ai-process --ai-format markdown --ai-task "Extract key information and create summary" --quiet
+
+# Parse JavaScript-heavy websites with Selenium
+panparsex parse https://example.com --use-selenium --quiet --output website.json
+
+# Parse with Selenium and AI processing
+panparsex parse https://example.com --use-selenium --ai-process --quiet --output parsed.json --ai-output analysis.json
 ```
 
 ### Python API
@@ -227,6 +237,9 @@ Options:
   --ai-model TEXT          OpenAI model to use (default: gpt-4o-mini)
   --ai-tokens INTEGER      Max tokens for AI response (default: 4000)
   --ai-temperature FLOAT   AI temperature 0.0-1.0 (default: 0.3)
+  --use-selenium           Use Selenium for JavaScript-heavy websites
+  --headless               Run browser in headless mode (Selenium)
+  --browser-delay FLOAT    Delay between page loads (Selenium)
   --help                   Show help message
 ```
 
@@ -314,6 +327,23 @@ result = processor.process_and_save(
     task="Analyze the company's services, extract contact information, and identify key features",
     output_format="markdown"
 )
+```
+
+### JavaScript-Heavy Websites with Selenium
+
+```python
+from panparsex.parsers.web_selenium import SeleniumWebParser
+from panparsex.types import Metadata
+
+# Parse JavaScript-heavy websites
+parser = SeleniumWebParser()
+meta = Metadata(source="https://spa-website.com", content_type="text/html")
+doc = parser.parse("https://spa-website.com", meta, headless=True, delay=2.0)
+
+print(f"Pages parsed: {doc.meta.extra['pages_parsed']}")
+for section in doc.sections:
+    print(f"Section: {section.heading}")
+    print(f"Content: {section.chunks[0].text[:200]}...")
 ```
 
 ## Contributing

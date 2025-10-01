@@ -40,6 +40,10 @@ Documentation = "https://github.com/dhruvildarji/panparser#readme"
 panparsex = "panparsex.cli:main"
 
 [project.optional-dependencies]
+selenium = [
+  "selenium>=4.0.0",
+  "webdriver-manager>=3.8.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import argparse, sys, json, pathlib, glob, os
-from .core import parse
+from .core import parse, _guess_meta
 from .ai_processor import AIProcessor
 
 def main(argv=None):
@@ -28,6 +28,11 @@ def main(argv=None):
     p.add_argument("--ai-model", default="gpt-4o-mini", help="OpenAI model to use")
     p.add_argument("--ai-tokens", type=int, default=4000, help="Max tokens for AI response")
     p.add_argument("--ai-temperature", type=float, default=0.3, help="AI temperature (0.0-1.0)")
+    
+    # Web crawling options
+    p.add_argument("--use-selenium", action="store_true", help="Use Selenium for JavaScript-heavy websites")
+    p.add_argument("--headless", action="store_true", default=True, help="Run browser in headless mode (Selenium)")
+    p.add_argument("--browser-delay", type=float, default=1.0, help="Delay between page loads (Selenium)")
 
     args = ap.parse_args(argv)
 
@@ -44,7 +49,16 @@ def main(argv=None):
                 parsed_docs.append(d)
                 docs.append(d.model_dump())
     else:
-        d = parse(target, recursive=args.recursive, max_links=args.max_links, max_depth=args.max_depth, same_origin=args.same_origin)
+        # Choose parser based on options
+        if args.use_selenium and (target.startswith('http://') or target.startswith('https://')):
+            # Use Selenium parser for web URLs
+            from .parsers.web_selenium import SeleniumWebParser
+            selenium_parser = SeleniumWebParser()
+            meta = _guess_meta(target, url=target)
+            d = selenium_parser.parse(target, meta, recursive=args.recursive, max_links=args.max_links, max_depth=args.max_depth, same_origin=args.same_origin, delay=args.browser_delay, headless=args.headless)
+        else:
+            # Use regular parser
+            d = parse(target, recursive=args.recursive, max_links=args.max_links, max_depth=args.max_depth, same_origin=args.same_origin)
         parsed_docs.append(d)
         docs.append(d.model_dump())
 

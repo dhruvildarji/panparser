@@ -6,6 +6,7 @@ from . import xml
 from . import html
 from . import pdf
 from . import web
+from . import web_selenium
 from . import csv
 from . import docx
 from . import markdown
