@@ -9,7 +9,7 @@ description = "Universal, extensible parser for many file types and websites wit
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "Apache-2.0"}
-authors = [{name="Dhruvil Darji", email="dhruvildarji1409@gmail.com"}]
+authors = [{name="Dhruvil Darji", email="dhruvil.darji@gmail.com"}]
 keywords = ["parser", "ingestion", "etl", "unstructured", "scraper", "crawler", "pdf", "html", "json", "yaml", "xml", "text"]
 dependencies = [
   "pydantic>=2.5",
@@ -30,10 +30,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/dhruvildarji/panparsex"
-Repository = "https://github.com/dhruvildarji/panparsex"
-Issues = "https://github.com/dhruvildarji/panparsex/issues"
-Documentation = "https://github.com/dhruvildarji/panparsex#readme"
+Homepage = "https://github.com/dhruvildarji/panparser"
+Repository = "https://github.com/dhruvildarji/panparser"
+Issues = "https://github.com/dhruvildarji/panparser/issues"
+Documentation = "https://github.com/dhruvildarji/panparser#readme"
 
 [project.scripts]
 panparsex = "panparsex.cli:main"
