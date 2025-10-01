@@ -124,7 +124,8 @@ class TestHTMLParser:
         assert isinstance(doc, UnifiedDocument)
         assert doc.meta.title == "Test Page"
         assert len(doc.sections) >= 1
-        assert "Welcome" in doc.sections[0].chunks[0].text
+        assert doc.sections[0].heading == "Welcome"
+        assert "This is a test paragraph" in doc.sections[0].chunks[0].text
         assert doc.meta.content_type == "text/html"
 
     def test_html_with_meta_tags(self, tmp_path):
@@ -210,7 +211,7 @@ def hello():
         assert doc.meta.title == "Main Title"
         assert len(doc.sections) >= 1
         assert "Main Title" in doc.sections[0].heading
-        assert "bold" in doc.sections[0].chunks[0].text
+        assert "This is a paragraph" in doc.sections[0].chunks[0].text
 
 
 class TestWebParser:

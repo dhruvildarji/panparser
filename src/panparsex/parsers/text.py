@@ -9,7 +9,8 @@ class TextParser(ParserProtocol):
     extensions: Iterable[str] = (".txt",)
 
     def can_parse(self, meta: Metadata) -> bool:
-        return meta.content_type.startswith("text/") or (meta.path or "").endswith(".txt")
+        return (meta.content_type == "text/plain" or 
+                (meta.path or "").endswith(".txt"))
 
     def parse(self, target, meta: Metadata, recursive: bool = False, **kwargs) -> UnifiedDocument:
         text = ""

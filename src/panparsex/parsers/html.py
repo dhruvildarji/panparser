@@ -28,9 +28,9 @@ class HTMLParser(ParserProtocol):
         soup = BeautifulSoup(html, "lxml")
         
         # Extract title
-        title = soup.title.string.strip() if soup.title and soup.title.string else None
-        if title: 
-            doc.meta.title = title
+        title_tag = soup.find("title")
+        if title_tag and title_tag.string:
+            doc.meta.title = title_tag.string.strip()
             
         # Extract meta information
         meta_tags = {}

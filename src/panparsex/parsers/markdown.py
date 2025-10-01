@@ -28,13 +28,12 @@ class MarkdownParser(ParserProtocol):
             tree = SyntaxTreeNode(tokens)
             
             # Extract title from first heading
-            for token in tokens:
+            for i, token in enumerate(tokens):
                 if token.type == "heading_open" and token.tag == "h1":
-                    # Find the next text token
-                    for i, t in enumerate(tokens):
-                        if t.type == "inline" and i > tokens.index(token):
-                            if t.children:
-                                doc.meta.title = t.children[0].content.strip()
+                    # Find the next inline token
+                    for j in range(i + 1, len(tokens)):
+                        if tokens[j].type == "inline" and tokens[j].children:
+                            doc.meta.title = tokens[j].children[0].content.strip()
                             break
                     break
             
@@ -55,10 +54,9 @@ class MarkdownParser(ParserProtocol):
                     
                     # Find the heading text
                     heading_text = ""
-                    for t in tokens:
-                        if t.type == "inline" and tokens.index(t) > tokens.index(token):
-                            if t.children:
-                                heading_text = t.children[0].content.strip()
+                    for j in range(tokens.index(token) + 1, len(tokens)):
+                        if tokens[j].type == "inline" and tokens[j].children:
+                            heading_text = tokens[j].children[0].content.strip()
                             break
                     
                     current_section = heading_text
@@ -68,10 +66,9 @@ class MarkdownParser(ParserProtocol):
                 elif token.type == "paragraph_open":
                     # Find paragraph text
                     paragraph_text = ""
-                    for t in tokens:
-                        if t.type == "inline" and tokens.index(t) > tokens.index(token):
-                            if t.children:
-                                paragraph_text = "".join([child.content for child in t.children if child.type == "text"])
+                    for j in range(tokens.index(token) + 1, len(tokens)):
+                        if tokens[j].type == "inline" and tokens[j].children:
+                            paragraph_text = "".join([child.content for child in tokens[j].children if child.type == "text"])
                             break
                     
                     if paragraph_text.strip():
@@ -90,10 +87,9 @@ class MarkdownParser(ParserProtocol):
                 elif token.type == "blockquote_open":
                     # Handle blockquotes
                     quote_text = ""
-                    for t in tokens:
-                        if t.type == "inline" and tokens.index(t) > tokens.index(token):
-                            if t.children:
-                                quote_text = "".join([child.content for child in t.children if child.type == "text"])
+                    for j in range(tokens.index(token) + 1, len(tokens)):
+                        if tokens[j].type == "inline" and tokens[j].children:
+                            quote_text = "".join([child.content for child in tokens[j].children if child.type == "text"])
                             break
                     
                     if quote_text.strip():
@@ -124,10 +120,9 @@ class MarkdownParser(ParserProtocol):
                     if href:
                         # Find link text
                         link_text = ""
-                        for t in tokens:
-                            if t.type == "inline" and tokens.index(t) > tokens.index(token):
-                                if t.children:
-                                    link_text = "".join([child.content for child in t.children if child.type == "text"])
+                        for j in range(tokens.index(token) + 1, len(tokens)):
+                            if tokens[j].type == "inline" and tokens[j].children:
+                                link_text = "".join([child.content for child in tokens[j].children if child.type == "text"])
                                 break
                         links.append({"url": href, "text": link_text})
                         

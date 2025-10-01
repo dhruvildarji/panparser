@@ -30,7 +30,12 @@ class CSVParser(ParserProtocol):
                 rows = list(reader)
                 
                 if not rows:
-                    return doc.add_text("[panparsex:csv] Empty CSV file")
+                    doc.sections.append(Section(
+                        heading="Error",
+                        chunks=[Chunk(text="[panparsex:csv] Empty CSV file", order=0, meta={"error": True})],
+                        meta={"error": True}
+                    ))
+                    return doc
                 
                 # Extract headers
                 headers = rows[0] if rows else []

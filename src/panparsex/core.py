@@ -39,6 +39,14 @@ def _guess_meta(target: Pathish, content_type: Optional[str] = None, url: Option
             ctype = "text/html"
         else:
             ctype, _ = mimetypes.guess_type(p.name)
+            # Handle common file types that mimetypes doesn't recognize
+            if not ctype:
+                if p.suffix.lower() in ['.yaml', '.yml']:
+                    ctype = "text/yaml"
+                elif p.suffix.lower() in ['.md', '.markdown']:
+                    ctype = "text/markdown"
+                elif p.suffix.lower() in ['.csv']:
+                    ctype = "text/csv"
     ctype = ctype or "application/octet-stream"
     return Metadata(source=str(target), content_type=ctype, path=str(p) if p.exists() else None, url=url)
 
@@ -54,29 +62,25 @@ def _load_entrypoint_parsers():
 
 _loaded_eps = False
 
-def parse(target: Pathish, recursive: bool = False, **kwargs) -> UnifiedDocument:
+def _ensure_parsers_loaded():
+    """Ensure all parsers are loaded and registered."""
     global _loaded_eps
     if not _loaded_eps:
         _load_entrypoint_parsers()
         _loaded_eps = True
-
+    
     # Ensure built-ins are registered (import side-effect)
-    from .parsers import text as _p_text  # noqa
-    from .parsers import json_ as _p_json  # noqa
-    from .parsers import yaml_ as _p_yaml  # noqa
-    from .parsers import xml as _p_xml  # noqa
-    from .parsers import html as _p_html  # noqa
-    from .parsers import pdf as _p_pdf  # noqa
-    from .parsers import web as _p_web  # noqa
-    from .parsers import csv as _p_csv  # noqa
-    from .parsers import docx as _p_docx  # noqa
-    from .parsers import markdown as _p_markdown  # noqa
-    from .parsers import rtf as _p_rtf  # noqa
-    from .parsers import excel as _p_excel  # noqa
-    from .parsers import pptx as _p_pptx  # noqa
+    from . import parsers  # noqa
+
+def parse(target: Pathish, recursive: bool = False, **kwargs) -> UnifiedDocument:
+    _ensure_parsers_loaded()
 
     url = kwargs.pop("url", None)
     meta = _guess_meta(target, content_type=kwargs.pop("content_type", None), url=url)
+
+    # Check if file exists (for non-URL targets)
+    if not url and not pathlib.Path(str(target)).exists():
+        raise FileNotFoundError(f"File not found: {target}")
 
     # Choose a parser
     best: Optional[ParserProtocol] = None
