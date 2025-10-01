@@ -41,11 +41,11 @@ panparsex parse ./documents --recursive --glob '**/*'
 # Pretty-print output
 panparsex parse document.html --pretty
 
-# Parse with AI processing
-panparsex parse document.pdf --ai-process --ai-output analysis.json
+# Parse with AI processing (quiet mode, save to files)
+panparsex parse document.pdf --ai-process --ai-output analysis.json --output parsed_content.json --quiet
 
-# Parse website with AI analysis
-panparsex parse https://example.com --ai-process --ai-format markdown --ai-task "Extract key information and create summary"
+# Parse website with AI analysis (no terminal output)
+panparsex parse https://example.com --ai-process --ai-format markdown --ai-task "Extract key information and create summary" --quiet
 ```
 
 ### Python API
@@ -217,6 +217,8 @@ Options:
   --max-depth INTEGER      Maximum crawl depth (web scraping)
   --same-origin            Restrict crawling to same origin
   --pretty                 Pretty-print JSON output
+  --output, -o             Output file for parsed results
+  --quiet, -q              Suppress all output to terminal
   --ai-process             Process with AI after parsing
   --ai-task TEXT           AI task description
   --ai-format TEXT         AI output format (structured_json, markdown, summary)

@@ -16,6 +16,8 @@ def main(argv=None):
     p.add_argument("--max-depth", type=int, default=1, help="Max depth when crawling")
     p.add_argument("--same-origin", action="store_true", help="Restrict crawl to same origin")
     p.add_argument("--pretty", action="store_true", help="Pretty-print JSON")
+    p.add_argument("--output", "-o", help="Output file for parsed results (default: no output to terminal)")
+    p.add_argument("--quiet", "-q", action="store_true", help="Suppress all output to terminal")
     
     # AI processing options
     p.add_argument("--ai-process", action="store_true", help="Process with AI after parsing")
@@ -52,7 +54,8 @@ def main(argv=None):
             # Use the first document for AI processing (or combine if multiple)
             main_doc = parsed_docs[0] if parsed_docs else None
             if not main_doc:
-                print("No documents to process with AI", file=sys.stderr)
+                if not args.quiet:
+                    print("No documents to process with AI", file=sys.stderr)
                 sys.exit(1)
             
             # Determine output file
@@ -65,14 +68,39 @@ def main(argv=None):
                 else:
                     output_file = "ai_processed_result.txt"
             
+            # Check for OpenAI API key
+            api_key = args.openai_key or os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                if not args.quiet:
+                    print("Warning: No OpenAI API key found. Set OPENAI_API_KEY environment variable or use --openai-key", file=sys.stderr)
+                    print("Skipping AI processing and saving parsed content only.", file=sys.stderr)
+                
+                # Save parsed content to file if requested
+                if args.output:
+                    with open(args.output, 'w', encoding='utf-8') as f:
+                        if args.pretty:
+                            json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                        else:
+                            json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+                    if not args.quiet:
+                        print(f"Parsed content saved to: {args.output}", file=sys.stderr)
+                elif not args.quiet:
+                    # Print to terminal if no output file and not quiet
+                    if args.pretty:
+                        print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
+                    else:
+                        print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
+                return
+            
             # Initialize AI processor
             processor = AIProcessor(
-                api_key=args.openai_key or os.getenv("OPENAI_API_KEY"),
+                api_key=api_key,
                 model=args.ai_model
             )
             
             # Process with AI
-            print(f"Processing with AI (model: {args.ai_model})...", file=sys.stderr)
+            if not args.quiet:
+                print(f"Processing with AI (model: {args.ai_model})...", file=sys.stderr)
             result = processor.process_and_save(
                 main_doc,
                 output_file,
@@ -82,10 +110,21 @@ def main(argv=None):
                 temperature=args.ai_temperature
             )
             
-            print(f"AI processing complete. Result saved to: {output_file}", file=sys.stderr)
+            if not args.quiet:
+                print(f"AI processing complete. Result saved to: {output_file}", file=sys.stderr)
             
-            # Also print the result to stdout if pretty printing is requested
-            if args.pretty:
+            # Save original parsed content to file if requested
+            if args.output:
+                with open(args.output, 'w', encoding='utf-8') as f:
+                    if args.pretty:
+                        json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                    else:
+                        json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+                if not args.quiet:
+                    print(f"Original parsed content saved to: {args.output}", file=sys.stderr)
+            
+            # Also print the result to stdout if pretty printing is requested and not quiet
+            if args.pretty and not args.quiet:
                 print("\n=== AI Processed Result ===")
                 if args.ai_format == "structured_json" and "raw_response" not in result:
                     print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -94,23 +133,46 @@ def main(argv=None):
                     print(content)
                 print("\n=== Original Parsed Content ===")
                 print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
-            else:
-                # Just print original content
+            elif not args.quiet and not args.output:
+                # Just print original content if no output file specified and not quiet
                 print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
                 
         except Exception as e:
-            print(f"AI processing failed: {e}", file=sys.stderr)
-            print("Falling back to original parsing result...", file=sys.stderr)
+            if not args.quiet:
+                print(f"AI processing failed: {e}", file=sys.stderr)
+                print("Falling back to original parsing result...", file=sys.stderr)
+            
+            # Save to file if requested
+            if args.output:
+                with open(args.output, 'w', encoding='utf-8') as f:
+                    if args.pretty:
+                        json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                    else:
+                        json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+                if not args.quiet:
+                    print(f"Parsed content saved to: {args.output}", file=sys.stderr)
+            elif not args.quiet:
+                # Print to terminal if no output file and not quiet
+                if args.pretty:
+                    print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
+                else:
+                    print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
+    else:
+        # No AI processing, save to file or print based on options
+        if args.output:
+            with open(args.output, 'w', encoding='utf-8') as f:
+                if args.pretty:
+                    json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                else:
+                    json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+            if not args.quiet:
+                print(f"Parsed content saved to: {args.output}", file=sys.stderr)
+        elif not args.quiet:
+            # Print to terminal if no output file and not quiet
             if args.pretty:
                 print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
             else:
                 print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
-    else:
-        # No AI processing, just print the parsed result
-        if args.pretty:
-            print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
-        else:
-            print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
 
 if __name__ == "__main__":
     main()
