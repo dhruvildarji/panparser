@@ -32,12 +32,15 @@ def register_parser(parser: ParserProtocol):
     return parser
 
 def _guess_meta(target: Pathish, content_type: Optional[str] = None, url: Optional[str] = None) -> Metadata:
-    p = pathlib.Path(str(target))
+    target_str = str(target)
+    is_url = target_str.startswith(('http://', 'https://'))
+    
     ctype = content_type
     if not ctype:
-        if url and re.match(r"^https?://", str(target)):
+        if is_url or (url and re.match(r"^https?://", target_str)):
             ctype = "text/html"
         else:
+            p = pathlib.Path(target_str)
             ctype, _ = mimetypes.guess_type(p.name)
             # Handle common file types that mimetypes doesn't recognize
             if not ctype:
@@ -48,7 +51,12 @@ def _guess_meta(target: Pathish, content_type: Optional[str] = None, url: Option
                 elif p.suffix.lower() in ['.csv']:
                     ctype = "text/csv"
     ctype = ctype or "application/octet-stream"
-    return Metadata(source=str(target), content_type=ctype, path=str(p) if p.exists() else None, url=url)
+    
+    if is_url:
+        return Metadata(source=target_str, content_type=ctype, path=None, url=target_str)
+    else:
+        p = pathlib.Path(target_str)
+        return Metadata(source=target_str, content_type=ctype, path=str(p) if p.exists() else None, url=url)
 
 def _load_entrypoint_parsers():
     for ep in importlib.metadata.entry_points(group="panparsex.parsers"):
@@ -79,7 +87,9 @@ def parse(target: Pathish, recursive: bool = False, **kwargs) -> UnifiedDocument
     meta = _guess_meta(target, content_type=kwargs.pop("content_type", None), url=url)
 
     # Check if file exists (for non-URL targets)
-    if not url and not pathlib.Path(str(target)).exists():
+    target_str = str(target)
+    is_url = target_str.startswith(('http://', 'https://'))
+    if not is_url and not pathlib.Path(target_str).exists():
         raise FileNotFoundError(f"File not found: {target}")
 
     # Choose a parser

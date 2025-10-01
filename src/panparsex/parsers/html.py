@@ -12,6 +12,9 @@ class HTMLParser(ParserProtocol):
     extensions: Iterable[str] = (".html", ".htm", ".xhtml")
 
     def can_parse(self, meta: Metadata) -> bool:
+        # Don't handle URLs - let the web parser handle them
+        if meta.url:
+            return False
         return (meta.content_type.startswith("text/html") or 
                 meta.content_type == "application/xhtml+xml" or
                 (meta.path or "").endswith((".html", ".htm", ".xhtml")))

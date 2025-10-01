@@ -23,7 +23,7 @@ class WebParser(ParserProtocol):
     def parse(self, target, meta: Metadata, recursive: bool = False, max_links: int = 50, max_depth: int = 1, same_origin: bool = True, delay: float = 0.0, user_agent: str = "panparsex/0.1 (+https://github.com/dhruvildarji/panparsex)", extract_js: bool = False, **kwargs) -> UnifiedDocument:
         start_url = str(target)
         doc = UnifiedDocument(meta=meta, sections=[])
-        seen: Set[str] = set()
+        seen: Set[tuple[str, int]] = set()
         q: Deque[tuple[str,int]] = deque([(start_url, 0)])
         parsed_start = urlparse(start_url)
         origin = f"{parsed_start.scheme}://{parsed_start.netloc}"
@@ -52,9 +52,9 @@ class WebParser(ParserProtocol):
         
         while q and (not recursive or count == 0 or (recursive and count < max_links)):
             url, depth = q.popleft()
-            if url in seen: 
+            if (url, depth) in seen: 
                 continue
-            seen.add(url)
+            seen.add((url, depth))
             if not allowed(url): 
                 continue
                 
@@ -123,10 +123,11 @@ class WebParser(ParserProtocol):
                 break
                 
         doc.meta.extra["pages_parsed"] = count
+        depths = [depth for _, depth in seen if depth > 0]
         doc.meta.extra["crawl_stats"] = {
             "total_pages": count,
-            "max_depth_reached": max(depth for _, depth in seen if depth > 0) if seen else 0,
-            "unique_domains": len(set(urlparse(url).netloc for url in seen))
+            "max_depth_reached": max(depths) if depths else 0,
+            "unique_domains": len(set(urlparse(url).netloc for url, _ in seen))
         }
         return doc
     
