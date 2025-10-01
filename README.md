@@ -14,6 +14,7 @@
 - 🧠 **Smart Detection**: Auto-detection by MIME type, file extension, and content analysis
 - 🔁 **Recursive Processing**: Folder traversal and website crawling with configurable depth
 - 🧪 **Clean Schema**: Unified Pydantic-based output format for all content types
+- 🤖 **AI-Powered Processing**: Use OpenAI GPT to analyze, restructure, and filter parsed content
 - 🛠️ **Zero Configuration**: Works out of the box with sensible defaults
 - 🚀 **High Performance**: Optimized for speed and memory efficiency
 
@@ -39,6 +40,12 @@ panparsex parse ./documents --recursive --glob '**/*'
 
 # Pretty-print output
 panparsex parse document.html --pretty
+
+# Parse with AI processing
+panparsex parse document.pdf --ai-process --ai-output analysis.json
+
+# Parse website with AI analysis
+panparsex parse https://example.com --ai-process --ai-format markdown --ai-task "Extract key information and create summary"
 ```
 
 ### Python API
@@ -50,6 +57,17 @@ from panparsex import parse
 doc = parse("document.pdf")
 print(doc.meta.title)
 print(doc.sections[0].chunks[0].text)
+
+# Parse with AI processing
+from panparsex.ai_processor import AIProcessor
+
+processor = AIProcessor(api_key="your-openai-key")
+result = processor.process_and_save(
+    doc,
+    "analysis.json",
+    task="Analyze and restructure the content",
+    output_format="structured_json"
+)
 
 # Parse a website
 doc = parse("https://example.com", recursive=True, max_links=10)
@@ -185,6 +203,7 @@ for result in results:
 - `PANPARSEX_USER_AGENT`: Custom user agent for web scraping
 - `PANPARSEX_TIMEOUT`: Request timeout in seconds (default: 15)
 - `PANPARSEX_DELAY`: Delay between requests in seconds (default: 0)
+- `OPENAI_API_KEY`: OpenAI API key for AI processing features
 
 ### CLI Options
 
@@ -198,6 +217,14 @@ Options:
   --max-depth INTEGER      Maximum crawl depth (web scraping)
   --same-origin            Restrict crawling to same origin
   --pretty                 Pretty-print JSON output
+  --ai-process             Process with AI after parsing
+  --ai-task TEXT           AI task description
+  --ai-format TEXT         AI output format (structured_json, markdown, summary)
+  --ai-output TEXT         Output file for AI-processed result
+  --openai-key TEXT        OpenAI API key
+  --ai-model TEXT          OpenAI model to use (default: gpt-4o-mini)
+  --ai-tokens INTEGER      Max tokens for AI response (default: 4000)
+  --ai-temperature FLOAT   AI temperature 0.0-1.0 (default: 0.3)
   --help                   Show help message
 ```
 
@@ -242,6 +269,49 @@ for section in doc.sections:
         print(f"\nFrom {section.meta['url']}:")
         print(f"Title: {section.heading}")
         print(f"Content: {section.chunks[0].text[:200]}...")
+```
+
+### AI-Powered Content Analysis
+
+```python
+from panparsex import parse
+from panparsex.ai_processor import AIProcessor
+
+# Parse a document
+doc = parse("business_report.pdf")
+
+# Process with AI
+processor = AIProcessor(api_key="your-openai-key")
+result = processor.process_and_save(
+    doc,
+    "analysis.json",
+    task="Extract key metrics, identify challenges, and provide recommendations",
+    output_format="structured_json"
+)
+
+# The result will contain structured analysis
+print("Summary:", result.get("summary"))
+print("Key Topics:", result.get("key_topics"))
+print("Recommendations:", result.get("recommendations"))
+```
+
+### AI Processing with Custom Task
+
+```python
+from panparsex import parse
+from panparsex.ai_processor import AIProcessor
+
+# Parse a website
+doc = parse("https://company.com", recursive=True, max_links=10)
+
+# Custom AI analysis
+processor = AIProcessor(api_key="your-openai-key")
+result = processor.process_and_save(
+    doc,
+    "company_analysis.md",
+    task="Analyze the company's services, extract contact information, and identify key features",
+    output_format="markdown"
+)
 ```
 
 ## Contributing

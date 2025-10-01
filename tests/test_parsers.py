@@ -125,7 +125,15 @@ class TestHTMLParser:
         assert doc.meta.title == "Test Page"
         assert len(doc.sections) >= 1
         assert doc.sections[0].heading == "Welcome"
-        assert "This is a test paragraph" in doc.sections[0].chunks[0].text
+        # Check that the heading is in the first chunk
+        assert "Welcome" in doc.sections[0].chunks[0].text
+        # Check that paragraph content is in subsequent chunks
+        paragraph_found = False
+        for chunk in doc.sections[0].chunks:
+            if "This is a test paragraph" in chunk.text:
+                paragraph_found = True
+                break
+        assert paragraph_found
         assert doc.meta.content_type == "text/html"
 
     def test_html_with_meta_tags(self, tmp_path):

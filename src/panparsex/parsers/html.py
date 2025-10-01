@@ -94,6 +94,9 @@ class HTMLParser(ParserProtocol):
                 # Start new section
                 current_section = text
                 current_chunks = []
+                # Add the heading as a chunk
+                chunk = Chunk(text=text, order=order, meta={"type": "heading", "tag": tag_name})
+                current_chunks.append(chunk)
                 order += 1
                 
             else:
