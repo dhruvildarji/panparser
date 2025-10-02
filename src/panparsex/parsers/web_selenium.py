@@ -50,14 +50,26 @@ class SeleniumWebParser(ParserProtocol):
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-plugins")
+        chrome_options.add_argument("--disable-images")
+        chrome_options.add_argument("--disable-javascript")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        
+        # Add experimental options to avoid detection
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
         
         count = 0
         
         try:
             driver = webdriver.Chrome(options=chrome_options)
             driver.set_page_load_timeout(30)
+            
+            # Execute script to hide automation indicators
+            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             
             while q and (not recursive or count == 0 or (recursive and count < max_links)):
                 url, depth = q.popleft()
@@ -77,8 +89,19 @@ class SeleniumWebParser(ParserProtocol):
                     # Additional wait for dynamic content
                     time.sleep(2)
                     
-                    # Get page source after JavaScript execution
+                    # Check for common error messages
                     page_source = driver.page_source
+                    if "Application error" in page_source or "client-side exception" in page_source:
+                        error_section = Section(
+                            heading=f"Application Error for {url}",
+                            chunks=[Chunk(text=f"Site returned application error, likely due to bot detection", order=count, meta={"error": True, "url": url})],
+                            meta={"error": True, "url": url, "error_type": "application_error"}
+                        )
+                        doc.sections.append(error_section)
+                        count += 1
+                        continue
+                    
+                    # Get page source after JavaScript execution
                     soup = BeautifulSoup(page_source, "lxml")
                     
                     # Extract page information
