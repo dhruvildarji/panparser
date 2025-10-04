@@ -7,7 +7,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2024-10-04
+
 ### Added
+- **📁 Folder Processing**: Comprehensive folder parsing functionality
+  - `parse_folder()`: Parse entire folders and return list of documents
+  - `parse_folder_unified()`: Parse folders and combine into single document
+  - Recursive folder scanning with progress tracking
+  - File pattern filtering (include/exclude patterns)
+  - Integration with existing image extraction and AI processing
+- **🖥️ Enhanced CLI**: New folder parsing options
+  - `--folder-mode`: Enable new folder parsing mode
+  - `--unified-output`: Combine all files into single document
+  - `--file-patterns`: Include specific file patterns (e.g., "*.pdf" "*.txt")
+  - `--exclude-patterns`: Exclude files by patterns (e.g., "*.tmp" ".git")
+  - `--no-progress`: Disable progress bar for scripting
+- **📚 Documentation**: Comprehensive folder processing documentation
+  - New "Folder Processing" section in README
+  - Command line examples for folder parsing
+  - Python API examples with filtering and AI processing
+  - `examples/folder_parsing_example.py` demonstrating usage
+- **🔧 Core Enhancements**:
+  - `_get_supported_extensions()`: Get all supported file extensions
+  - `_is_supported_file()`: Check if file is supported by parsers
+  - `_scan_folder()`: Intelligent folder scanning with filtering
+  - Progress tracking with `tqdm` integration
+  - Error handling for failed file parsing
+
+### Enhanced
+- **CLI Folder Handling**: Improved folder processing logic
+  - Backward compatibility with legacy glob-based parsing
+  - Better error reporting for failed files
+  - Enhanced image extraction reporting for folders
+  - Improved AI processing for multiple documents
+
+### Technical Details
+- **Performance**: Optimized for large folder processing
+- **Memory Efficiency**: Generator-based file scanning
+- **Error Resilience**: Continue processing even if some files fail
+- **Progress Tracking**: Visual progress bar with file count and speed
+- **File Filtering**: Flexible pattern-based inclusion/exclusion
+
+### Usage Examples
+
+#### Command Line
+```bash
+# Parse entire folder recursively
+panparsex parse ./documents --folder-mode --recursive
+
+# Parse folder and combine all files into single document
+panparsex parse ./documents --folder-mode --unified-output --output combined.json
+
+# Parse folder with file filtering
+panparsex parse ./documents --folder-mode --file-patterns "*.pdf" "*.txt" --exclude-patterns "*.tmp" ".git"
+
+# Parse folder with image extraction and AI processing
+panparsex parse ./documents --folder-mode --extract-images --ai-process --ai-task "Analyze all documents"
+```
+
+#### Python API
+```python
+from panparsex import parse_folder, parse_folder_unified
+
+# Parse folder and get list of documents
+documents = parse_folder(
+    "./documents",
+    recursive=True,
+    show_progress=True,
+    exclude_patterns=['*.tmp', '*.log', '.git']
+)
+
+# Parse folder and combine into single document
+unified_doc = parse_folder_unified(
+    "./documents",
+    recursive=True,
+    show_progress=True,
+    file_patterns=['*.pdf', '*.txt', '*.json']
+)
+```
+
+### Impact
+- **Latency**: Efficient batch processing reduces overall processing time
+- **Accuracy**: Consistent parsing across multiple file types
+- **DX**: Simplified workflow for processing large document collections
+- **Scalability**: Handles folders with hundreds of files efficiently
+
+### Tests
+- Manual testing with mixed file types (PDF, TXT, JSON)
+- CLI testing with various folder parsing options
+- Image extraction testing in folder mode
+- AI processing testing with unified documents
+
+### Follow-ups
+- Performance optimization for very large folders
+- Parallel processing support
+- Custom parser registration for folder processing
+- Advanced filtering options (file size, date, etc.)
+
+## [0.3.0] - 2024-10-04
 - OCR support for scanned documents
 - Audio/video transcription capabilities
 - Database connection parsing
