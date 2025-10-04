@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2024-10-04
+
+### Added
+- **🚫 Programming File Filtering**: Intelligent filtering of programming files
+  - Comprehensive list of programming file extensions (C/C++, Python, JavaScript, etc.)
+  - Automatic exclusion of programming files from folder parsing
+  - Support for 80+ programming file types and extensions
+- **📊 Parsing Summary**: Detailed statistics and reporting
+  - `ParsingSummary` class with comprehensive statistics
+  - Track total files found, programming files ignored, parsing success/failure
+  - File type breakdown and processing statistics
+  - Lists of ignored programming files and failed files
+  - Total sections and images extracted
+- **🖥️ Enhanced CLI Output**: Rich summary display
+  - Beautiful parsing summary with emojis and formatting
+  - File type statistics breakdown
+  - Programming files ignored list (limited to 10 for readability)
+  - Failed files with error messages
+  - Progress tracking and detailed logging
+
+### Enhanced
+- **Folder Parsing Functions**: Updated return signatures
+  - `parse_folder()` now returns `(documents, summary)` tuple
+  - `parse_folder_unified()` now returns `(unified_doc, summary)` tuple
+  - Backward compatibility maintained with clear documentation
+- **File Type Detection**: Improved file classification
+  - Distinguish between content files and programming files
+  - Support for build files, configuration files, and IDE files
+  - Media files and system files exclusion
+
+### Technical Details
+- **Programming File Categories**:
+  - Compiled languages: C/C++, Java, C#, Go, Rust, Swift, Kotlin, Scala, Dart, R
+  - Scripting languages: Python, Ruby, JavaScript/TypeScript, PHP, Perl, Shell scripts
+  - Web technologies: CSS, SCSS, Vue, Svelte, Astro
+  - Configuration files: JSON, YAML, TOML, INI, Docker, Git, CI/CD configs
+  - Build systems: Make, CMake, Gradle, Maven, Webpack, Rollup
+  - IDE files: VS Code, IntelliJ, Xcode, Sublime, Atom projects
+  - Documentation: Markdown, reStructuredText, LaTeX, AsciiDoc
+  - Database files: SQL, SQLite, backup files
+  - Media files: Images, videos, audio files
+  - System files: Binaries, libraries, archives, logs
+
+### Usage Examples
+
+#### Python API
+```python
+from panparsex import parse_folder, ParsingSummary
+
+# Parse folder with summary
+documents, summary = parse_folder("./documents", recursive=True)
+
+print(f"Total files found: {summary.total_files_found}")
+print(f"Programming files ignored: {summary.programming_files_ignored}")
+print(f"Files parsed successfully: {summary.files_parsed_successfully}")
+print(f"File types processed: {summary.file_types_processed}")
+```
+
+#### Command Line
+```bash
+# Parse folder with detailed summary
+panparsex parse ./documents --folder-mode --recursive
+
+# Output will show:
+# 📊 Parsing Summary:
+#    Total files found: 150
+#    Programming files ignored: 45
+#    Files parsed successfully: 25
+#    Files failed: 0
+#    Total sections extracted: 180
+#    Total images extracted: 12
+#    File types processed:
+#      .pdf: 10 files
+#      .txt: 8 files
+#      .json: 7 files
+#    Programming files ignored:
+#      documents/src/main.py
+#      documents/src/utils.js
+#      documents/config/settings.json
+```
+
+### Impact
+- **Accuracy**: Focus on content files, ignore irrelevant programming files
+- **Performance**: Faster processing by skipping programming files
+- **Clarity**: Clear statistics on what was processed vs ignored
+- **DX**: Better understanding of parsing results and file types
+
+### Tests
+- Manual testing with mixed file types (PDF, TXT, JSON, Python, JavaScript, C)
+- CLI testing with summary display
+- Programming file filtering verification
+- Statistics accuracy validation
+
+### Follow-ups
+- Custom programming file extension configuration
+- File size filtering options
+- Advanced file type detection using content analysis
+- Parallel processing for large folders
+
 ## [0.4.0] - 2024-10-04
 
 ### Added

@@ -11,6 +11,113 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
+# Programming file extensions to exclude from parsing
+PROGRAMMING_EXTENSIONS = {
+    # Compiled languages
+    '.c', '.cpp', '.cc', '.cxx', '.c++', '.h', '.hpp', '.hxx', '.h++',
+    '.java', '.class', '.jar', '.war', '.ear',
+    '.cs', '.vb', '.fs', '.fsx', '.fsi', '.fsproj', '.vbproj', '.csproj',
+    '.go', '.mod', '.sum',
+    '.rs', '.rlib',
+    '.swift', '.swiftmodule',
+    '.kt', '.kts', '.ktm',
+    '.scala', '.sc',
+    '.dart',
+    '.r', '.R',
+    '.m', '.mm',  # Objective-C/C++
+    
+    # Scripting languages
+    '.py', '.pyc', '.pyo', '.pyd', '.pyw', '.pyx', '.pyi',
+    '.rb', '.rbw', '.rake', '.gemspec',
+    '.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs',
+    '.php', '.phtml', '.php3', '.php4', '.php5', '.phps',
+    '.pl', '.pm', '.t', '.pod',
+    '.sh', '.bash', '.zsh', '.fish', '.ksh', '.csh', '.tcsh',
+    '.ps1', '.psm1', '.psd1', '.ps1xml', '.psc1', '.pssc',
+    '.bat', '.cmd', '.com', '.exe',
+    '.lua', '.luac',
+    '.tcl', '.tk',
+    '.vim', '.vimrc',
+    '.el', '.elc',  # Emacs Lisp
+    
+    # Web technologies
+    '.css', '.scss', '.sass', '.less', '.styl',
+    '.vue', '.svelte', '.astro',
+    
+    # Configuration and build files
+    '.makefile', '.mk', '.cmake', '.cmake.in',
+    '.dockerfile', '.dockerignore',
+    '.gitignore', '.gitattributes', '.gitmodules',
+    '.env', '.env.local', '.env.development', '.env.production',
+    '.babelrc', '.eslintrc', '.prettierrc', '.stylelintrc',
+    '.webpack.config.js', '.rollup.config.js', '.vite.config.js',
+    '.package.json', '.composer.json', '.pom.xml', '.build.xml',
+    '.gradle', '.gradlew', '.gradle.kts',
+    '.maven', '.pom', '.settings.xml',
+    '.travis.yml', '.circleci', '.github', '.gitlab-ci.yml',
+    '.jenkinsfile', '.azure-pipelines.yml',
+    
+    # Database files
+    '.sql', '.sqlite', '.sqlite3', '.db', '.mdb', '.accdb',
+    '.dump', '.backup', '.bak',
+    
+    # Documentation formats that are code-like
+    '.md', '.markdown', '.rst', '.tex', '.latex',
+    '.adoc', '.asciidoc',
+    
+    # IDE and editor files
+    '.sln', '.vcxproj', '.vcxproj.filters', '.vcxproj.user',
+    '.xcodeproj', '.xcworkspace', '.pbxproj',
+    '.idea', '.iml', '.ipr', '.iws',
+    '.vscode', '.code-workspace',
+    '.sublime-project', '.sublime-workspace',
+    '.atom', '.atom-project',
+    
+    # Version control
+    '.git', '.svn', '.hg', '.bzr',
+    
+    # Archives and binaries
+    '.zip', '.tar', '.gz', '.bz2', '.xz', '.7z', '.rar',
+    '.exe', '.dll', '.so', '.dylib', '.a', '.lib', '.o', '.obj',
+    '.bin', '.hex', '.elf', '.out',
+    
+    # Media files (usually not text content)
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.svg', '.ico',
+    '.mp3', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm',
+    '.wav', '.flac', '.aac', '.ogg', '.m4a',
+    '.psd', '.ai', '.eps', '.sketch', '.fig',
+    
+    # System files
+    '.sys', '.dll', '.exe', '.msi', '.deb', '.rpm', '.pkg',
+    '.lock', '.pid', '.tmp', '.temp', '.cache', '.log',
+    '.DS_Store', '.Thumbs.db', '.desktop', '.lnk',
+}
+
+@dataclass
+class ParsingSummary:
+    """Summary of folder parsing results."""
+    total_files_found: int = 0
+    programming_files_ignored: int = 0
+    files_parsed_successfully: int = 0
+    files_failed: int = 0
+    total_sections: int = 0
+    total_images: int = 0
+    file_types_processed: Dict[str, int] = None
+    programming_files_list: List[str] = None
+    failed_files_list: List[tuple] = None  # (file_path, error_message)
+    
+    def __post_init__(self):
+        if self.file_types_processed is None:
+            self.file_types_processed = {}
+        if self.programming_files_list is None:
+            self.programming_files_list = []
+        if self.failed_files_list is None:
+            self.failed_files_list = []
+
+def _is_programming_file(file_path: pathlib.Path) -> bool:
+    """Check if a file is a programming file that should be ignored."""
+    return file_path.suffix.lower() in PROGRAMMING_EXTENSIONS
+
 Pathish = Union[str, os.PathLike]
 
 @runtime_checkable
@@ -137,7 +244,7 @@ def _is_supported_file(file_path: pathlib.Path) -> bool:
 def _scan_folder(folder_path: pathlib.Path, recursive: bool = True, 
                  file_patterns: Optional[List[str]] = None,
                  exclude_patterns: Optional[List[str]] = None) -> Generator[pathlib.Path, None, None]:
-    """Scan a folder for supported files."""
+    """Scan a folder for supported files, excluding programming files."""
     if not folder_path.exists() or not folder_path.is_dir():
         raise ValueError(f"Path is not a valid directory: {folder_path}")
     
@@ -173,6 +280,7 @@ def _scan_folder(folder_path: pathlib.Path, recursive: bool = True,
         for file_path in folder_path.rglob('*'):
             if (file_path.is_file() and 
                 _is_supported_file(file_path) and 
+                not _is_programming_file(file_path) and
                 not should_exclude(file_path)):
                 yield file_path
     else:
@@ -180,6 +288,7 @@ def _scan_folder(folder_path: pathlib.Path, recursive: bool = True,
         for file_path in folder_path.iterdir():
             if (file_path.is_file() and 
                 _is_supported_file(file_path) and 
+                not _is_programming_file(file_path) and
                 not should_exclude(file_path)):
                 yield file_path
 
@@ -187,7 +296,7 @@ def parse_folder(folder_path: Pathish, recursive: bool = True,
                  file_patterns: Optional[List[str]] = None,
                  exclude_patterns: Optional[List[str]] = None,
                  show_progress: bool = True,
-                 **kwargs) -> List[UnifiedDocument]:
+                 **kwargs) -> tuple[List[UnifiedDocument], ParsingSummary]:
     """
     Parse all supported files in a folder.
     
@@ -200,18 +309,31 @@ def parse_folder(folder_path: Pathish, recursive: bool = True,
         **kwargs: Additional arguments passed to individual file parsers
     
     Returns:
-        List of UnifiedDocument objects, one for each parsed file
+        Tuple of (List of UnifiedDocument objects, ParsingSummary)
     """
     folder_path = pathlib.Path(folder_path)
+    summary = ParsingSummary()
     
-    # Scan for files
+    # First, scan all files to get statistics
+    all_files = list(folder_path.rglob('*') if recursive else folder_path.iterdir())
+    all_files = [f for f in all_files if f.is_file()]
+    
+    summary.total_files_found = len(all_files)
+    
+    # Count programming files
+    programming_files = [f for f in all_files if _is_programming_file(f)]
+    summary.programming_files_ignored = len(programming_files)
+    summary.programming_files_list = [str(f) for f in programming_files]
+    
+    # Scan for files to parse
     files = list(_scan_folder(folder_path, recursive, file_patterns, exclude_patterns))
     
     if not files:
         logger.warning(f"No supported files found in {folder_path}")
-        return []
+        return [], summary
     
     logger.info(f"Found {len(files)} files to parse in {folder_path}")
+    logger.info(f"Ignored {summary.programming_files_ignored} programming files")
     
     # Parse files
     documents = []
@@ -228,24 +350,43 @@ def parse_folder(folder_path: Pathish, recursive: bool = True,
             logger.debug(f"Parsing file: {file_path}")
             doc = parse(file_path, recursive=False, **kwargs)
             documents.append(doc)
+            
+            # Track file type statistics
+            file_ext = file_path.suffix.lower()
+            summary.file_types_processed[file_ext] = summary.file_types_processed.get(file_ext, 0) + 1
+            
+            # Track sections and images
+            summary.total_sections += len(doc.sections)
+            if hasattr(doc, 'images') and doc.images:
+                summary.total_images += len(doc.images)
+                
         except Exception as e:
             logger.error(f"Failed to parse {file_path}: {e}")
-            failed_files.append((file_path, str(e)))
+            failed_files.append((str(file_path), str(e)))
+    
+    # Update summary
+    summary.files_parsed_successfully = len(documents)
+    summary.files_failed = len(failed_files)
+    summary.failed_files_list = failed_files
     
     # Log results
     logger.info(f"Successfully parsed {len(documents)} files")
+    logger.info(f"Failed to parse {len(failed_files)} files")
+    logger.info(f"Total sections extracted: {summary.total_sections}")
+    logger.info(f"Total images extracted: {summary.total_images}")
+    
     if failed_files:
-        logger.warning(f"Failed to parse {len(failed_files)} files:")
+        logger.warning(f"Failed files:")
         for file_path, error in failed_files:
             logger.warning(f"  {file_path}: {error}")
     
-    return documents
+    return documents, summary
 
 def parse_folder_unified(folder_path: Pathish, recursive: bool = True,
                         file_patterns: Optional[List[str]] = None,
                         exclude_patterns: Optional[List[str]] = None,
                         show_progress: bool = True,
-                        **kwargs) -> UnifiedDocument:
+                        **kwargs) -> tuple[UnifiedDocument, ParsingSummary]:
     """
     Parse all supported files in a folder and combine them into a single UnifiedDocument.
     
@@ -258,9 +399,9 @@ def parse_folder_unified(folder_path: Pathish, recursive: bool = True,
         **kwargs: Additional arguments passed to individual file parsers
     
     Returns:
-        Single UnifiedDocument containing all parsed content
+        Tuple of (Single UnifiedDocument containing all parsed content, ParsingSummary)
     """
-    documents = parse_folder(folder_path, recursive, file_patterns, exclude_patterns, show_progress, **kwargs)
+    documents, summary = parse_folder(folder_path, recursive, file_patterns, exclude_patterns, show_progress, **kwargs)
     
     if not documents:
         # Return empty document
@@ -270,7 +411,7 @@ def parse_folder_unified(folder_path: Pathish, recursive: bool = True,
             content_type="application/x-folder",
             path=str(folder_path)
         )
-        return UnifiedDocument(meta=meta, sections=[])
+        return UnifiedDocument(meta=meta, sections=[]), summary
     
     # Combine all documents into one
     combined_doc = documents[0]  # Start with first document
@@ -302,4 +443,4 @@ def parse_folder_unified(folder_path: Pathish, recursive: bool = True,
             image.meta["original_file"] = doc.meta.source
             combined_doc.images.append(image)
     
-    return combined_doc
+    return combined_doc, summary

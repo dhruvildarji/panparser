@@ -81,12 +81,12 @@ def main(argv=None):
             # Choose parsing method
             if args.unified_output:
                 # Parse folder and combine into single document
-                d = parse_folder_unified(target, **parse_kwargs)
+                d, summary = parse_folder_unified(target, **parse_kwargs)
                 parsed_docs.append(d)
                 docs.append(d.model_dump())
             else:
                 # Parse folder and return list of documents
-                folder_docs = parse_folder(target, **parse_kwargs)
+                folder_docs, summary = parse_folder(target, **parse_kwargs)
                 parsed_docs.extend(folder_docs)
                 docs.extend([doc.model_dump() for doc in folder_docs])
                 
@@ -97,6 +97,34 @@ def main(argv=None):
                         print(f"Extracted {total_images} images from {len(folder_docs)} files", file=sys.stderr)
                         if args.image_output_dir:
                             print(f"Images saved to: {args.image_output_dir}", file=sys.stderr)
+            
+            # Display parsing summary
+            if not args.quiet:
+                print(f"\n📊 Parsing Summary:", file=sys.stderr)
+                print(f"   Total files found: {summary.total_files_found}", file=sys.stderr)
+                print(f"   Programming files ignored: {summary.programming_files_ignored}", file=sys.stderr)
+                print(f"   Files parsed successfully: {summary.files_parsed_successfully}", file=sys.stderr)
+                print(f"   Files failed: {summary.files_failed}", file=sys.stderr)
+                print(f"   Total sections extracted: {summary.total_sections}", file=sys.stderr)
+                print(f"   Total images extracted: {summary.total_images}", file=sys.stderr)
+                
+                if summary.file_types_processed:
+                    print(f"   File types processed:", file=sys.stderr)
+                    for ext, count in sorted(summary.file_types_processed.items()):
+                        print(f"     {ext}: {count} files", file=sys.stderr)
+                
+                if summary.programming_files_list and len(summary.programming_files_list) <= 10:
+                    print(f"   Programming files ignored:", file=sys.stderr)
+                    for file_path in summary.programming_files_list[:10]:
+                        print(f"     {file_path}", file=sys.stderr)
+                    if len(summary.programming_files_list) > 10:
+                        print(f"     ... and {len(summary.programming_files_list) - 10} more", file=sys.stderr)
+                
+                if summary.failed_files_list:
+                    print(f"   Failed files:", file=sys.stderr)
+                    for file_path, error in summary.failed_files_list:
+                        print(f"     {file_path}: {error}", file=sys.stderr)
+                print()  # Empty line for readability
         else:
             # Legacy glob-based parsing
             for fn in glob.glob(str(pth / args.glob), recursive=True):
