@@ -96,14 +96,35 @@ class AIProcessor:
         if doc.meta.content_type:
             content_parts.append(f"Content Type: {doc.meta.content_type}")
         
+        # Add image summary if images are present
+        if doc.images:
+            content_parts.append(f"\nDocument contains {len(doc.images)} images:")
+            for img in doc.images:
+                img_info = f"- Image {img.image_id} on page {img.page_number}"
+                if img.dimensions:
+                    img_info += f" ({img.dimensions.get('width', '?')}x{img.dimensions.get('height', '?')})"
+                if img.associated_text:
+                    img_info += f" - Associated text: {img.associated_text[:100]}..."
+                content_parts.append(img_info)
+        
         # Add sections
         for i, section in enumerate(doc.sections):
             section_text = f"\n--- Section {i+1} ---"
             if section.heading:
                 section_text += f"\nHeading: {section.heading}"
             
+            # Add section images info
+            if section.images:
+                section_text += f"\nImages in this section: {len(section.images)}"
+                for img in section.images:
+                    section_text += f"\n  - {img.image_id}: {img.associated_text or 'No associated text'}"
+            
             for j, chunk in enumerate(section.chunks):
                 section_text += f"\nChunk {j+1}: {chunk.text}"
+                
+                # Add associated images info for this chunk
+                if chunk.associated_images:
+                    section_text += f"\n  Associated images: {', '.join(chunk.associated_images)}"
             
             content_parts.append(section_text)
         
@@ -113,7 +134,7 @@ class AIProcessor:
         """Create the system prompt for the AI."""
         base_prompt = f"""You are an expert data analyst and content processor. Your task is to: {task}
 
-The content will be provided in a structured format with sections and chunks. Please analyze the content thoroughly and provide your response in the requested format.
+The content will be provided in a structured format with sections and chunks. The document may also contain images with associated metadata including page numbers, dimensions, and nearby text. Please analyze the content thoroughly and provide your response in the requested format.
 
 Output Format: {output_format}
 
@@ -123,6 +144,8 @@ Guidelines:
 3. Filter out irrelevant or redundant information
 4. Maintain accuracy and preserve important details
 5. Provide clear, well-organized output
+6. When images are present, consider their context and associated text in your analysis
+7. Note the relationship between images and surrounding text content
 
 For structured_json format, return a JSON object with the following structure:
 {{
@@ -132,6 +155,11 @@ For structured_json format, return a JSON object with the following structure:
     "structured_content": {{
         "section1": "content",
         "section2": "content"
+    }},
+    "images_analysis": {{
+        "total_images": 0,
+        "images_by_page": {{"page1": ["image1", "image2"]}},
+        "image_contexts": ["context1", "context2"]
     }},
     "insights": ["insight1", "insight2"],
     "recommendations": ["recommendation1", "recommendation2"]

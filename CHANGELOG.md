@@ -17,7 +17,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Language detection
 - Sentiment analysis integration
 
-## [0.1.0] - 2024-01-XX
+## [0.3.0] - 2024-10-04
+
+### Added
+- **PDF Image Extraction**: Comprehensive image detection and extraction from PDF documents
+- **Image Metadata Tracking**: Complete metadata including position, dimensions, format, and timestamps
+- **Text-Image Association**: Automatic association of images with nearby text content
+- **AI Integration**: Enhanced AI processor includes image metadata in analysis
+- **CLI Image Options**: New command-line options for image extraction (`--extract-images`, `--image-output-dir`, `--min-image-size`)
+- **PyMuPDF Integration**: Primary image extraction using PyMuPDF with pypdf fallback
+- **Image Position Tracking**: Records exact position and dimensions of images on pages
+- **Configurable Extraction**: Customizable minimum image size thresholds and output directories
+- **Robust Error Handling**: Graceful fallback when image extraction fails
+- **JSON Serialization**: Proper datetime handling in JSON output
+
+### Enhanced
+- **PDF Parser**: Now extracts images alongside text content
+- **Document Structure**: Images integrated into sections and document-level collections
+- **AI Processor**: Includes image context in analysis and structured output
+- **CLI Interface**: Enhanced with image extraction options and better error reporting
+- **Type System**: New `ImageMetadata` class with comprehensive image information
+
+### Dependencies
+- Added `Pillow>=9.0.0` for image processing
+- Added `PyMuPDF>=1.23.0` for advanced PDF image extraction
+
+### Technical Details
+- **Image Detection**: Automatic detection using PyMuPDF (primary) and pypdf (fallback)
+- **Image Extraction**: Saves images as PNG files with unique identifiers
+- **Metadata Tracking**: Comprehensive tracking of image properties and context
+- **Text Association**: Links images with surrounding text for better context
+- **Performance**: Optimized image extraction with configurable size thresholds
+- **Compatibility**: Backward compatible with existing parsing workflows
+
+### Examples
+- PDF with image extraction
+- Image metadata analysis
+- AI processing with image context
+- CLI image extraction commands
+- Batch processing with images
+
+### CLI Commands
+- `panparsex parse document.pdf --extract-images` - Extract images from PDF
+- `panparsex parse document.pdf --extract-images --image-output-dir ./images` - Custom output directory
+- `panparsex parse document.pdf --extract-images --min-image-size 50 50` - Minimum image size
+- `panparsex parse document.pdf --extract-images --ai-process` - AI analysis with images
+
+### Python API
+- `parse(target, extract_images=True)` - Enable image extraction
+- `parse(target, image_output_dir="images")` - Custom output directory
+- `parse(target, min_image_size=(50, 50))` - Minimum image size threshold
+- `doc.images` - Access all extracted images
+- `doc.get_images_by_page(page_number)` - Get images by page
+- `doc.get_images_by_section(section_index)` - Get images by section
+- `ImageMetadata` - Complete image metadata model
+
+### Performance
+- Efficient image extraction with memory management
+- Configurable size thresholds to avoid tiny images
+- Parallel processing capabilities
+- Optimized file I/O operations
+
+### Security
+- Safe image file handling
+- Input validation for image parameters
+- Secure file path handling
+- No code execution from extracted images
+
+### Compatibility
+- Python 3.9+
+- Cross-platform support (Windows, macOS, Linux)
+- Unicode support in image metadata
+- Various image format support (PNG, JPEG, etc.)
+
+## [0.2.2] - 2024-XX-XX
 
 ### Added
 - Initial release of panparsex

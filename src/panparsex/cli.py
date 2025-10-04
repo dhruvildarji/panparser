@@ -1,7 +1,15 @@
 from __future__ import annotations
 import argparse, sys, json, pathlib, glob, os
+from datetime import datetime
 from .core import parse, _guess_meta
 from .ai_processor import AIProcessor
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder to handle datetime objects."""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 def main(argv=None):
     argv = argv or sys.argv[1:]
@@ -28,6 +36,11 @@ def main(argv=None):
     p.add_argument("--ai-model", default="gpt-4o-mini", help="OpenAI model to use")
     p.add_argument("--ai-tokens", type=int, default=4000, help="Max tokens for AI response")
     p.add_argument("--ai-temperature", type=float, default=0.3, help="AI temperature (0.0-1.0)")
+    
+    # Image extraction options (for PDFs)
+    p.add_argument("--extract-images", action="store_true", help="Extract images from PDFs")
+    p.add_argument("--image-output-dir", help="Directory to save extracted images (default: extracted_images)")
+    p.add_argument("--min-image-size", nargs=2, type=int, default=[50, 50], metavar=("WIDTH", "HEIGHT"), help="Minimum image size to extract")
     
     # Web crawling options
     p.add_argument("--use-selenium", action="store_true", help="Use Selenium for JavaScript-heavy websites")
@@ -57,10 +70,31 @@ def main(argv=None):
             meta = _guess_meta(target, url=target)
             d = selenium_parser.parse(target, meta, recursive=args.recursive, max_links=args.max_links, max_depth=args.max_depth, same_origin=args.same_origin, delay=args.browser_delay, headless=args.headless)
         else:
-            # Use regular parser
-            d = parse(target, recursive=args.recursive, max_links=args.max_links, max_depth=args.max_depth, same_origin=args.same_origin)
+            # Use regular parser with image extraction options if specified
+            parse_kwargs = {
+                'recursive': args.recursive,
+                'max_links': args.max_links,
+                'max_depth': args.max_depth,
+                'same_origin': args.same_origin
+            }
+            
+            # Add image extraction options for PDFs
+            if args.extract_images:
+                parse_kwargs['extract_images'] = True
+                if args.image_output_dir:
+                    parse_kwargs['image_output_dir'] = args.image_output_dir
+                parse_kwargs['min_image_size'] = tuple(args.min_image_size)
+            
+            d = parse(target, **parse_kwargs)
         parsed_docs.append(d)
         docs.append(d.model_dump())
+        
+        # Report image extraction results
+        if args.extract_images and hasattr(d, 'images') and d.images:
+            if not args.quiet:
+                print(f"Extracted {len(d.images)} images from PDF", file=sys.stderr)
+                if args.image_output_dir:
+                    print(f"Images saved to: {args.image_output_dir}", file=sys.stderr)
 
     # AI processing
     if args.ai_process:
@@ -92,18 +126,20 @@ def main(argv=None):
                 # Save parsed content to file if requested
                 if args.output:
                     with open(args.output, 'w', encoding='utf-8') as f:
+                        # Use model_dump to ensure proper serialization
+                        data_to_save = docs if len(docs)>1 else docs[0]
                         if args.pretty:
-                            json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                            json.dump(data_to_save, f, indent=2, ensure_ascii=False, cls=DateTimeEncoder)
                         else:
-                            json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+                            json.dump(data_to_save, f, ensure_ascii=False, cls=DateTimeEncoder)
                     if not args.quiet:
                         print(f"Parsed content saved to: {args.output}", file=sys.stderr)
                 elif not args.quiet:
                     # Print to terminal if no output file and not quiet
                     if args.pretty:
-                        print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
+                        print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False, cls=DateTimeEncoder))
                     else:
-                        print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
+                        print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False, cls=DateTimeEncoder))
                 return
             
             # Initialize AI processor
@@ -131,9 +167,9 @@ def main(argv=None):
             if args.output:
                 with open(args.output, 'w', encoding='utf-8') as f:
                     if args.pretty:
-                        json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                        json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False, cls=DateTimeEncoder)
                     else:
-                        json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+                        json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False, cls=DateTimeEncoder)
                 if not args.quiet:
                     print(f"Original parsed content saved to: {args.output}", file=sys.stderr)
             
@@ -141,15 +177,15 @@ def main(argv=None):
             if args.pretty and not args.quiet:
                 print("\n=== AI Processed Result ===")
                 if args.ai_format == "structured_json" and "raw_response" not in result:
-                    print(json.dumps(result, indent=2, ensure_ascii=False))
+                    print(json.dumps(result, indent=2, ensure_ascii=False, cls=DateTimeEncoder))
                 else:
                     content = result.get("content", result.get("raw_response", str(result)))
                     print(content)
                 print("\n=== Original Parsed Content ===")
-                print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
+                print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False, cls=DateTimeEncoder))
             elif not args.quiet and not args.output:
                 # Just print original content if no output file specified and not quiet
-                print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
+                print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False, cls=DateTimeEncoder))
                 
         except Exception as e:
             if not args.quiet:
@@ -160,33 +196,33 @@ def main(argv=None):
             if args.output:
                 with open(args.output, 'w', encoding='utf-8') as f:
                     if args.pretty:
-                        json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                        json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False, cls=DateTimeEncoder)
                     else:
-                        json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+                        json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False, cls=DateTimeEncoder)
                 if not args.quiet:
                     print(f"Parsed content saved to: {args.output}", file=sys.stderr)
             elif not args.quiet:
                 # Print to terminal if no output file and not quiet
                 if args.pretty:
-                    print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
+                    print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False, cls=DateTimeEncoder))
                 else:
-                    print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
+                    print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False, cls=DateTimeEncoder))
     else:
         # No AI processing, save to file or print based on options
         if args.output:
             with open(args.output, 'w', encoding='utf-8') as f:
                 if args.pretty:
-                    json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False)
+                    json.dump(docs if len(docs)>1 else docs[0], f, indent=2, ensure_ascii=False, cls=DateTimeEncoder)
                 else:
-                    json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False)
+                    json.dump(docs if len(docs)>1 else docs[0], f, ensure_ascii=False, cls=DateTimeEncoder)
             if not args.quiet:
                 print(f"Parsed content saved to: {args.output}", file=sys.stderr)
         elif not args.quiet:
             # Print to terminal if no output file and not quiet
             if args.pretty:
-                print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False))
+                print(json.dumps(docs if len(docs)>1 else docs[0], indent=2, ensure_ascii=False, cls=DateTimeEncoder))
             else:
-                print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False))
+                print(json.dumps(docs if len(docs)>1 else docs[0], ensure_ascii=False, cls=DateTimeEncoder))
 
 if __name__ == "__main__":
     main()

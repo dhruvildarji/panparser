@@ -10,6 +10,7 @@
 
 - 🧩 **Plugin Architecture**: Add new parsers without touching core code
 - 📄 **Comprehensive Support**: Text, JSON, YAML, XML, HTML, PDF, CSV, DOCX, Markdown, RTF, Excel, PowerPoint, and more
+- 🖼️ **PDF Image Extraction**: Extract images from PDF documents with metadata and text association
 - 🌐 **Web Scraping**: Intelligent website crawling with robots.txt respect and JavaScript extraction
 - 🧠 **Smart Detection**: Auto-detection by MIME type, file extension, and content analysis
 - 🔁 **Recursive Processing**: Folder traversal and website crawling with configurable depth
@@ -48,6 +49,12 @@ panparsex parse document.html --pretty
 # Parse with AI processing (quiet mode, save to files)
 panparsex parse document.pdf --ai-process --ai-output analysis.json --output parsed_content.json --quiet
 
+# Extract images from PDF
+panparsex parse document.pdf --extract-images --image-output-dir ./images
+
+# Extract images with AI analysis
+panparsex parse document.pdf --extract-images --ai-process --ai-task "Analyze images and text content"
+
 # Parse website with AI analysis (no terminal output)
 panparsex parse https://example.com --ai-process --ai-format markdown --ai-task "Extract key information and create summary" --quiet
 
@@ -85,6 +92,100 @@ for section in doc.sections:
     print(f"Section: {section.heading}")
     for chunk in section.chunks:
         print(f"  {chunk.text[:100]}...")
+```
+
+## PDF Image Extraction
+
+panparsex v0.3.0 introduces comprehensive PDF image extraction capabilities that automatically detect, extract, and associate images with text content.
+
+### Basic Image Extraction
+
+```python
+from panparsex import parse
+
+# Parse PDF with image extraction enabled
+doc = parse("document.pdf", extract_images=True)
+
+# Access extracted images
+print(f"Found {len(doc.images)} images")
+for img in doc.images:
+    print(f"Image {img.image_id} on page {img.page_number}")
+    print(f"Dimensions: {img.dimensions}")
+    print(f"File: {img.file_path}")
+    if img.associated_text:
+        print(f"Associated text: {img.associated_text[:100]}...")
+```
+
+### Advanced Configuration
+
+```python
+# Custom output directory and minimum image size
+doc = parse(
+    "document.pdf",
+    extract_images=True,
+    image_output_dir="my_images",
+    min_image_size=(100, 100)  # Minimum width and height
+)
+
+# Access images by page or section
+page_images = doc.get_images_by_page(1)
+section_images = doc.get_images_by_section(0)
+```
+
+### AI Analysis with Images
+
+```python
+from panparsex.ai_processor import AIProcessor
+
+# Parse with image extraction
+doc = parse("document.pdf", extract_images=True)
+
+# AI analysis including image context
+processor = AIProcessor(api_key="your-openai-key")
+result = processor.process_document(
+    doc,
+    task="Analyze this document including any images and their relationship to text content",
+    output_format="structured_json"
+)
+
+# Access image analysis results
+if 'images_analysis' in result:
+    analysis = result['images_analysis']
+    print(f"Total images: {analysis['total_images']}")
+    print(f"Image contexts: {analysis['image_contexts']}")
+```
+
+### CLI Image Extraction
+
+```bash
+# Extract images from PDF
+panparsex parse document.pdf --extract-images
+
+# Specify output directory and minimum size
+panparsex parse document.pdf --extract-images --image-output-dir ./images --min-image-size 50 50
+
+# Combine with AI analysis
+panparsex parse document.pdf --extract-images --ai-process --ai-task "Analyze images and text content"
+```
+
+### Image Metadata
+
+Each extracted image includes comprehensive metadata:
+
+```python
+class ImageMetadata:
+    image_id: str                    # Unique identifier
+    page_number: int                 # Page where image appears
+    position: Dict[str, float]       # Position on page (x, y, width, height)
+    file_path: Optional[str]         # Path to extracted image file
+    file_size: Optional[int]         # File size in bytes
+    format: Optional[str]            # Image format (PNG, JPEG, etc.)
+    dimensions: Optional[Dict[str, int]]  # Width and height
+    extracted_at: datetime           # Extraction timestamp
+    associated_text: Optional[str]   # Text near the image
+    confidence_score: Optional[float]  # Detection confidence
+    meta: Dict[str, Any]             # Additional metadata
+```
 
 # Parse with custom options
 doc = parse("data.csv", content_type="text/csv")
