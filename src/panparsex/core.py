@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 import mimetypes, os, pathlib, importlib.metadata, re
-from typing import Protocol, runtime_checkable, Iterable, Optional, Dict, Any, Union, List
+from typing import Protocol, runtime_checkable, Iterable, Optional, Dict, Any, Union, List, Generator
 from .types import UnifiedDocument, Metadata, Section, Chunk
 from dataclasses import dataclass
+import logging
+from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 Pathish = Union[str, os.PathLike]
 
@@ -116,3 +120,186 @@ def parse(target: Pathish, recursive: bool = False, **kwargs) -> UnifiedDocument
         raise RuntimeError("No suitable parser found and no text fallback available.")
 
     return best.parse(target, meta, recursive=recursive, **kwargs)
+
+def _get_supported_extensions() -> set:
+    """Get all supported file extensions from registered parsers."""
+    _ensure_parsers_loaded()
+    extensions = set()
+    for parser in _registry.parsers:
+        extensions.update(parser.extensions)
+    return extensions
+
+def _is_supported_file(file_path: pathlib.Path) -> bool:
+    """Check if a file is supported by any registered parser."""
+    supported_extensions = _get_supported_extensions()
+    return file_path.suffix.lower() in supported_extensions
+
+def _scan_folder(folder_path: pathlib.Path, recursive: bool = True, 
+                 file_patterns: Optional[List[str]] = None,
+                 exclude_patterns: Optional[List[str]] = None) -> Generator[pathlib.Path, None, None]:
+    """Scan a folder for supported files."""
+    if not folder_path.exists() or not folder_path.is_dir():
+        raise ValueError(f"Path is not a valid directory: {folder_path}")
+    
+    # Default file patterns if none provided
+    if file_patterns is None:
+        file_patterns = ['*']
+    
+    # Default exclude patterns
+    if exclude_patterns is None:
+        exclude_patterns = [
+            '.*',  # Hidden files/folders
+            '__pycache__',
+            'node_modules',
+            '.git',
+            '.svn',
+            '.hg',
+            '*.tmp',
+            '*.temp',
+            '*.log',
+            '*.cache'
+        ]
+    
+    def should_exclude(file_path: pathlib.Path) -> bool:
+        """Check if file should be excluded based on patterns."""
+        file_str = str(file_path)
+        for pattern in exclude_patterns:
+            if file_path.match(pattern) or pattern in file_str:
+                return True
+        return False
+    
+    if recursive:
+        # Recursive scan
+        for file_path in folder_path.rglob('*'):
+            if (file_path.is_file() and 
+                _is_supported_file(file_path) and 
+                not should_exclude(file_path)):
+                yield file_path
+    else:
+        # Non-recursive scan
+        for file_path in folder_path.iterdir():
+            if (file_path.is_file() and 
+                _is_supported_file(file_path) and 
+                not should_exclude(file_path)):
+                yield file_path
+
+def parse_folder(folder_path: Pathish, recursive: bool = True, 
+                 file_patterns: Optional[List[str]] = None,
+                 exclude_patterns: Optional[List[str]] = None,
+                 show_progress: bool = True,
+                 **kwargs) -> List[UnifiedDocument]:
+    """
+    Parse all supported files in a folder.
+    
+    Args:
+        folder_path: Path to the folder to parse
+        recursive: Whether to scan subdirectories recursively
+        file_patterns: List of file patterns to include (e.g., ['*.pdf', '*.txt'])
+        exclude_patterns: List of patterns to exclude (e.g., ['*.tmp', '.git'])
+        show_progress: Whether to show progress bar
+        **kwargs: Additional arguments passed to individual file parsers
+    
+    Returns:
+        List of UnifiedDocument objects, one for each parsed file
+    """
+    folder_path = pathlib.Path(folder_path)
+    
+    # Scan for files
+    files = list(_scan_folder(folder_path, recursive, file_patterns, exclude_patterns))
+    
+    if not files:
+        logger.warning(f"No supported files found in {folder_path}")
+        return []
+    
+    logger.info(f"Found {len(files)} files to parse in {folder_path}")
+    
+    # Parse files
+    documents = []
+    failed_files = []
+    
+    # Create progress bar if requested
+    if show_progress:
+        file_iterator = tqdm(files, desc="Parsing files", unit="file")
+    else:
+        file_iterator = files
+    
+    for file_path in file_iterator:
+        try:
+            logger.debug(f"Parsing file: {file_path}")
+            doc = parse(file_path, recursive=False, **kwargs)
+            documents.append(doc)
+        except Exception as e:
+            logger.error(f"Failed to parse {file_path}: {e}")
+            failed_files.append((file_path, str(e)))
+    
+    # Log results
+    logger.info(f"Successfully parsed {len(documents)} files")
+    if failed_files:
+        logger.warning(f"Failed to parse {len(failed_files)} files:")
+        for file_path, error in failed_files:
+            logger.warning(f"  {file_path}: {error}")
+    
+    return documents
+
+def parse_folder_unified(folder_path: Pathish, recursive: bool = True,
+                        file_patterns: Optional[List[str]] = None,
+                        exclude_patterns: Optional[List[str]] = None,
+                        show_progress: bool = True,
+                        **kwargs) -> UnifiedDocument:
+    """
+    Parse all supported files in a folder and combine them into a single UnifiedDocument.
+    
+    Args:
+        folder_path: Path to the folder to parse
+        recursive: Whether to scan subdirectories recursively
+        file_patterns: List of file patterns to include
+        exclude_patterns: List of patterns to exclude
+        show_progress: Whether to show progress bar
+        **kwargs: Additional arguments passed to individual file parsers
+    
+    Returns:
+        Single UnifiedDocument containing all parsed content
+    """
+    documents = parse_folder(folder_path, recursive, file_patterns, exclude_patterns, show_progress, **kwargs)
+    
+    if not documents:
+        # Return empty document
+        folder_path = pathlib.Path(folder_path)
+        meta = Metadata(
+            source=str(folder_path),
+            content_type="application/x-folder",
+            path=str(folder_path)
+        )
+        return UnifiedDocument(meta=meta, sections=[])
+    
+    # Combine all documents into one
+    combined_doc = documents[0]  # Start with first document
+    
+    # Update metadata to reflect folder source
+    folder_path = pathlib.Path(folder_path)
+    combined_doc.meta.source = str(folder_path)
+    combined_doc.meta.content_type = "application/x-folder"
+    combined_doc.meta.path = str(folder_path)
+    
+    # Add sections from other documents
+    for i, doc in enumerate(documents[1:], 1):
+        # Add a separator section
+        separator_section = Section(
+            heading=f"--- File {i+1}: {doc.meta.source} ---",
+            chunks=[],
+            meta={"file_separator": True, "original_file": doc.meta.source}
+        )
+        combined_doc.sections.append(separator_section)
+        
+        # Add all sections from the document
+        for section in doc.sections:
+            # Update section metadata to include original file info
+            section.meta["original_file"] = doc.meta.source
+            combined_doc.sections.append(section)
+        
+        # Add images from the document
+        for image in doc.images:
+            image.meta["original_file"] = doc.meta.source
+            combined_doc.images.append(image)
+    
+    return combined_doc

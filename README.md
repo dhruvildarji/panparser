@@ -11,6 +11,7 @@
 - 🧩 **Plugin Architecture**: Add new parsers without touching core code
 - 📄 **Comprehensive Support**: Text, JSON, YAML, XML, HTML, PDF, CSV, DOCX, Markdown, RTF, Excel, PowerPoint, and more
 - 🖼️ **PDF Image Extraction**: Extract images from PDF documents with metadata and text association
+- 📁 **Folder Processing**: Parse entire folders recursively with progress tracking and file filtering
 - 🌐 **Web Scraping**: Intelligent website crawling with robots.txt respect and JavaScript extraction
 - 🧠 **Smart Detection**: Auto-detection by MIME type, file extension, and content analysis
 - 🔁 **Recursive Processing**: Folder traversal and website crawling with configurable depth
@@ -40,8 +41,23 @@ panparsex parse document.pdf
 # Parse a website with recursive crawling
 panparsex parse https://example.com --recursive --max-links 50 --max-depth 2
 
-# Parse a directory recursively
+# Parse a directory recursively (legacy mode)
 panparsex parse ./documents --recursive --glob '**/*'
+
+# Parse entire folder with new folder mode
+panparsex parse ./documents --folder-mode --recursive
+
+# Parse folder and combine all files into single document
+panparsex parse ./documents --folder-mode --unified-output --output combined.json
+
+# Parse folder with file filtering
+panparsex parse ./documents --folder-mode --file-patterns "*.pdf" "*.txt" --exclude-patterns "*.tmp" ".git"
+
+# Parse folder with image extraction
+panparsex parse ./documents --folder-mode --extract-images --image-output-dir ./extracted_images
+
+# Parse folder with AI processing
+panparsex parse ./documents --folder-mode --ai-process --ai-task "Analyze all documents and create summary"
 
 # Pretty-print output
 panparsex parse document.html --pretty
@@ -93,6 +109,86 @@ for section in doc.sections:
     for chunk in section.chunks:
         print(f"  {chunk.text[:100]}...")
 ```
+
+## Folder Processing
+
+panparsex can parse entire folders recursively, processing all supported file types with progress tracking and intelligent filtering.
+
+### Command Line Examples
+
+```bash
+# Parse entire folder recursively
+panparsex parse ./documents --folder-mode --recursive
+
+# Parse folder and combine all files into single document
+panparsex parse ./documents --folder-mode --unified-output --output combined.json
+
+# Parse folder with file filtering
+panparsex parse ./documents --folder-mode --file-patterns "*.pdf" "*.txt" --exclude-patterns "*.tmp" ".git"
+
+# Parse folder with image extraction from PDFs
+panparsex parse ./documents --folder-mode --extract-images --image-output-dir ./extracted_images
+
+# Parse folder with AI processing
+panparsex parse ./documents --folder-mode --ai-process --ai-task "Analyze all documents and create summary"
+
+# Disable progress bar for scripting
+panparsex parse ./documents --folder-mode --no-progress --output results.json
+```
+
+### Python API Examples
+
+```python
+from panparsex import parse_folder, parse_folder_unified
+
+# Parse folder and get list of documents
+documents = parse_folder(
+    "./documents",
+    recursive=True,
+    show_progress=True,
+    exclude_patterns=['*.tmp', '*.log', '.git']
+)
+
+print(f"Found {len(documents)} documents")
+for doc in documents:
+    print(f"File: {doc.meta.source}")
+    print(f"Sections: {len(doc.sections)}")
+    if hasattr(doc, 'images') and doc.images:
+        print(f"Images: {len(doc.images)}")
+
+# Parse folder and combine into single document
+unified_doc = parse_folder_unified(
+    "./documents",
+    recursive=True,
+    show_progress=True,
+    file_patterns=['*.pdf', '*.txt', '*.json'],
+    exclude_patterns=['*.tmp', '.git']
+)
+
+print(f"Combined document: {len(unified_doc.sections)} sections")
+print(f"Total images: {len(unified_doc.images)}")
+
+# Process with AI
+from panparsex.ai_processor import AIProcessor
+
+processor = AIProcessor(api_key="your-openai-key")
+result = processor.process_document(
+    unified_doc,
+    task="Analyze all documents and create comprehensive summary",
+    output_format="structured_json"
+)
+```
+
+### Folder Processing Features
+
+- **🔄 Recursive Scanning**: Process subdirectories automatically
+- **📊 Progress Tracking**: Visual progress bar with file count and speed
+- **🎯 File Filtering**: Include/exclude files by patterns
+- **🖼️ Image Extraction**: Extract images from PDFs in batch
+- **🤖 AI Processing**: Analyze entire folder contents with AI
+- **📁 Unified Output**: Combine all files into single document
+- **⚡ Performance**: Optimized for large folder processing
+- **🛡️ Error Handling**: Continue processing even if some files fail
 
 ## PDF Image Extraction
 

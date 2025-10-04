@@ -1,0 +1,44 @@
+{
+  "schema_id": "panparsex/v1",
+  "meta": {
+    "source": "/home/ddarji/dhruvil/storage/data/parser/NVIDIA_1.pdf",
+    "content_type": "application/pdf",
+    "encoding": null,
+    "url": null,
+    "path": "/home/ddarji/dhruvil/storage/data/parser/NVIDIA_1.pdf",
+    "title": null,
+    "language": null,
+    "created_at": null,
+    "modified_at": null,
+    "extra": {
+      "creator": "Workday BIRT Report Engine, version: 4.7.0"
+    }
+  },
+  "sections": [
+    {
+      "heading": "Page 1",
+      "chunks": [
+        {
+          "text": "C1314975January 25, 2023\nDHRUVIL DARJI\nWe're excited to present your NVIDIA offer!\nYour offer letter/employment agreement contains the full terms and conditions. We \nhave included the highlights summarized below1.\nEmploying Entity NVIDIA Corporation\nYour Position Senior System Software Engineer\nYour Manager Bhanu Velukuru\nYour Location US, CA, Santa Clara\nAnticipated Start Date March 6, 2023\nAnnualized Base Pay USD 185,000\nTotal Offer Bonus USD 27,000\nIf you have any questions about your offer, please contact your recruiter. \nNVIDIA Corporation Stock Grant (RSUs)\nYou will also be recommended to receive the following discretionary grant from NVIDIA Corporation.\nGrant Value USD 300,000\n1 Any incentive pay or variable compensation, bonuses, and/or relocation packages are subject to the terms and conditions of the relevant NVIDIA plan, which may be \nprovided to you at a later date. All amounts are stated on a gross basis and may be subject to tax withholdings and other deductions under applicable law. In case of any \nconflict between this summary and the [offer letter/employment agreement], the [offer letter/employment agreement] will govern.\nWe look forward to you joining the team",
+          "order": 0,
+          "id": null,
+          "meta": {},
+          "associated_images": []
+        }
+      ],
+      "meta": {
+        "page_number": 1
+      },
+      "images": [
+        {
+          "image_id": "img_1_1_15af03da",
+          "page_number": 1,
+          "position": {},
+          "file_path": "cli_extracted_images_fixed/img_1_1_15af03da_page_1.png",
+          "file_size": 108738,
+          "format": "png",
+          "dimensions": {
+            "width": 4001,
+            "height": 3337
+          },
+          "extracted_at": 

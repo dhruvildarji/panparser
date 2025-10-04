@@ -1,7 +1,7 @@
 from __future__ import annotations
 import argparse, sys, json, pathlib, glob, os
 from datetime import datetime
-from .core import parse, _guess_meta
+from .core import parse, _guess_meta, parse_folder, parse_folder_unified
 from .ai_processor import AIProcessor
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -17,9 +17,14 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("parse", help="Parse a path, file, or URL")
-    p.add_argument("target", help="Path/URL to parse")
+    p.add_argument("target", help="Path/URL to parse (file, folder, or URL)")
     p.add_argument("--recursive", action="store_true", help="Recurse into folders or follow links")
-    p.add_argument("--glob", default="**/*", help="Glob when target is a folder")
+    p.add_argument("--folder-mode", action="store_true", help="Parse entire folder (alternative to --recursive for folders)")
+    p.add_argument("--unified-output", action="store_true", help="Combine all folder files into single document")
+    p.add_argument("--file-patterns", nargs="*", help="File patterns to include (e.g., *.pdf *.txt)")
+    p.add_argument("--exclude-patterns", nargs="*", help="Patterns to exclude (e.g., *.tmp .git)")
+    p.add_argument("--no-progress", action="store_true", help="Disable progress bar for folder parsing")
+    p.add_argument("--glob", default="**/*", help="Glob when target is a folder (legacy mode)")
     p.add_argument("--max-links", type=int, default=50, help="Max links/pages when crawling")
     p.add_argument("--max-depth", type=int, default=1, help="Max depth when crawling")
     p.add_argument("--same-origin", action="store_true", help="Restrict crawl to same origin")
@@ -54,13 +59,59 @@ def main(argv=None):
     docs = []
     parsed_docs = []
     
+    # Check if target is a directory
     if pth.exists() and pth.is_dir():
-        for fn in glob.glob(str(pth / args.glob), recursive=True):
-            fp = pathlib.Path(fn)
-            if fp.is_file():
-                d = parse(str(fp), recursive=args.recursive)
+        # Use new folder parsing if folder-mode is enabled or if no legacy glob is specified
+        if args.folder_mode or args.glob == "**/*":
+            # Prepare parsing options
+            parse_kwargs = {
+                'recursive': args.recursive,
+                'show_progress': not args.no_progress,
+                'file_patterns': args.file_patterns,
+                'exclude_patterns': args.exclude_patterns
+            }
+            
+            # Add image extraction options for PDFs
+            if args.extract_images:
+                parse_kwargs['extract_images'] = True
+                if args.image_output_dir:
+                    parse_kwargs['image_output_dir'] = args.image_output_dir
+                parse_kwargs['min_image_size'] = tuple(args.min_image_size)
+            
+            # Choose parsing method
+            if args.unified_output:
+                # Parse folder and combine into single document
+                d = parse_folder_unified(target, **parse_kwargs)
                 parsed_docs.append(d)
                 docs.append(d.model_dump())
+            else:
+                # Parse folder and return list of documents
+                folder_docs = parse_folder(target, **parse_kwargs)
+                parsed_docs.extend(folder_docs)
+                docs.extend([doc.model_dump() for doc in folder_docs])
+                
+                # Report image extraction results
+                total_images = sum(len(doc.images) for doc in folder_docs if hasattr(doc, 'images'))
+                if args.extract_images and total_images > 0:
+                    if not args.quiet:
+                        print(f"Extracted {total_images} images from {len(folder_docs)} files", file=sys.stderr)
+                        if args.image_output_dir:
+                            print(f"Images saved to: {args.image_output_dir}", file=sys.stderr)
+        else:
+            # Legacy glob-based parsing
+            for fn in glob.glob(str(pth / args.glob), recursive=True):
+                fp = pathlib.Path(fn)
+                if fp.is_file():
+                    parse_kwargs = {'recursive': args.recursive}
+                    if args.extract_images:
+                        parse_kwargs['extract_images'] = True
+                        if args.image_output_dir:
+                            parse_kwargs['image_output_dir'] = args.image_output_dir
+                        parse_kwargs['min_image_size'] = tuple(args.min_image_size)
+                    
+                    d = parse(str(fp), **parse_kwargs)
+                    parsed_docs.append(d)
+                    docs.append(d.model_dump())
     else:
         # Choose parser based on options
         if args.use_selenium and (target.startswith('http://') or target.startswith('https://')):

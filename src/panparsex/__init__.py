@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2024 Dhruvil Darji
 
-from .core import parse, ParserProtocol, register_parser, get_registry
+from .core import parse, ParserProtocol, register_parser, get_registry, parse_folder, parse_folder_unified
 from .types import UnifiedDocument, Section, Chunk, Metadata
 
 __all__ = [
     "parse",
+    "parse_folder",
+    "parse_folder_unified",
     "ParserProtocol",
     "register_parser",
     "get_registry",
