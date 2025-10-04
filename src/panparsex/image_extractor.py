@@ -12,6 +12,14 @@ from pathlib import Path
 from datetime import datetime
 import logging
 
+# Try to import PyMuPDF, fallback to None if not available
+try:
+    import fitz
+    PYMUPDF_AVAILABLE = True
+except ImportError:
+    fitz = None
+    PYMUPDF_AVAILABLE = False
+
 from .types import ImageMetadata
 
 logger = logging.getLogger(__name__)
@@ -63,9 +71,7 @@ class ImageExtractor:
     
     def _extract_with_pymupdf(self, pdf_path: str, extract_images: bool) -> List[ImageMetadata]:
         """Extract images using PyMuPDF (fitz)."""
-        try:
-            import fitz  # PyMuPDF
-        except ImportError:
+        if not PYMUPDF_AVAILABLE:
             raise ImportError("PyMuPDF is required for image extraction. Install with: pip install PyMuPDF")
         
         images = []
@@ -280,12 +286,10 @@ class ImageExtractor:
     
     def _get_text_near_image(self, page, img_rect) -> Optional[str]:
         """Get text that appears near an image."""
-        if not img_rect:
+        if not img_rect or not PYMUPDF_AVAILABLE or fitz is None:
             return None
         
         try:
-            import fitz  # Import fitz here to avoid issues when PyMuPDF is not available
-            
             # Get text blocks near the image
             text_blocks = page.get_text("dict")
             nearby_text = []
