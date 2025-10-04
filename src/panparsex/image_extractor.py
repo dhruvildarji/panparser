@@ -70,6 +70,7 @@ class ImageExtractor:
         
         images = []
         doc = fitz.open(pdf_path)
+        seen_hashes = set()  # Track image content hashes to avoid duplicates
         
         for page_num in range(len(doc)):
             page = doc[page_num]
@@ -87,6 +88,13 @@ class ImageExtractor:
                     if pix.width < self.min_image_size[0] or pix.height < self.min_image_size[1]:
                         pix = None
                         continue
+                    
+                    # Check for duplicate images by content hash
+                    img_hash = hashlib.md5(pix.tobytes()).hexdigest()
+                    if img_hash in seen_hashes:
+                        pix = None
+                        continue
+                    seen_hashes.add(img_hash)
                     
                     # Generate unique image ID
                     image_id = f"img_{page_num + 1}_{img_index + 1}_{uuid.uuid4().hex[:8]}"
@@ -276,6 +284,8 @@ class ImageExtractor:
             return None
         
         try:
+            import fitz  # Import fitz here to avoid issues when PyMuPDF is not available
+            
             # Get text blocks near the image
             text_blocks = page.get_text("dict")
             nearby_text = []

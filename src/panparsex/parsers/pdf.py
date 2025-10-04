@@ -50,18 +50,20 @@ class PDFParser(ParserProtocol):
                 if reader.metadata.creator:
                     doc.meta.extra["creator"] = reader.metadata.creator
             
-            # Extract text and images page by page
+            # Extract all images once at the beginning if enabled
+            all_images = []
+            if extract_images and image_extractor:
+                try:
+                    all_images = image_extractor.extract_images_from_pdf(str(target), extract_images=True)
+                except Exception as e:
+                    print(f"Warning: Could not extract images: {e}")
+            
+            # Extract text page by page and associate images
             for i, page in enumerate(reader.pages):
                 page_text = page.extract_text() or ""
                 
-                # Extract images from this page if enabled
-                page_images = []
-                if extract_images and image_extractor:
-                    try:
-                        all_images = image_extractor.extract_images_from_pdf(str(target), extract_images=True)
-                        page_images = [img for img in all_images if img.page_number == i + 1]
-                    except Exception as e:
-                        print(f"Warning: Could not extract images from page {i + 1}: {e}")
+                # Get images for this page
+                page_images = [img for img in all_images if img.page_number == i + 1]
                 
                 if page_text.strip() or page_images:
                     # Create a section for each page
