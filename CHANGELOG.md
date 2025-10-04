@@ -207,7 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Network protocol support
 
 ### License
-- Apache License 2.0
+- MIT License
 - Open source and free to use
 - Commercial use allowed
 - Modification and distribution allowed
@@ -278,7 +278,7 @@ We welcome feedback, bug reports, and feature requests. Please use GitHub Issues
 We welcome contributions! Please see CONTRIBUTING.md for guidelines.
 
 **License:**
-This project is licensed under the Apache License 2.0.
+This project is licensed under the MIT License.
 
 **Support:**
 - Email: dhruvil.darji@gmail.com

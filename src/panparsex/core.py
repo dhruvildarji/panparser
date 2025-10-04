@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 Dhruvil Darji
+
 from __future__ import annotations
 import mimetypes, os, pathlib, importlib.metadata, re
 from typing import Protocol, runtime_checkable, Iterable, Optional, Dict, Any, Union, List
