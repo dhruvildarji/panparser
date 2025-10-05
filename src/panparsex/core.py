@@ -61,9 +61,6 @@ PROGRAMMING_EXTENSIONS = {
     '.sql', '.sqlite', '.sqlite3', '.db', '.mdb', '.accdb',
     '.dump', '.backup', '.bak',
     
-    # Documentation formats that are code-like
-    '.md', '.markdown', '.rst', '.tex', '.latex',
-    '.adoc', '.asciidoc',
     
     # IDE and editor files
     '.sln', '.vcxproj', '.vcxproj.filters', '.vcxproj.user',
