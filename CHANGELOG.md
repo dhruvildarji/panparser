@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2024-10-04
+
+### Fixed
+- Minor bug fixes and improvements
+- Enhanced error handling
+- Improved documentation
+
+### Enhanced
+- Better error messages for failed file parsing
+- Improved CLI output formatting
+- Enhanced file type detection accuracy
+
 ## [0.5.0] - 2024-10-04
 
 ### Added
