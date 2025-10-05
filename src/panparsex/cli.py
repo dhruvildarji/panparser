@@ -41,6 +41,7 @@ def main(argv=None):
     p.add_argument("--ai-model", default="gpt-4o-mini", help="OpenAI model to use")
     p.add_argument("--ai-tokens", type=int, default=4000, help="Max tokens for AI response")
     p.add_argument("--ai-temperature", type=float, default=0.3, help="AI temperature (0.0-1.0)")
+    p.add_argument("--ai-chunk-size", type=int, help="Override automatic chunk size for large content (in tokens)")
     
     # Image extraction options (for PDFs)
     p.add_argument("--extract-images", action="store_true", help="Extract images from PDFs")
@@ -236,7 +237,8 @@ def main(argv=None):
                 task=args.ai_task,
                 output_format=args.ai_format,
                 max_tokens=args.ai_tokens,
-                temperature=args.ai_temperature
+                temperature=args.ai_temperature,
+                chunk_size=args.ai_chunk_size
             )
             
             if not args.quiet:

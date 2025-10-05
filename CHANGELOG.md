@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2024-12-19
+
+### Added
+- **Automatic Content Chunking for AI Processing**: Large documents that exceed AI model token limits are now automatically split into manageable chunks
+- **Context Preservation**: Each chunk includes context from previous chunks to maintain coherence across multiple AI calls
+- **Smart Chunking Algorithm**: Content is split intelligently by sections, paragraphs, and sentences to preserve structure
+- **Progress Feedback**: Users see progress messages when chunking is used
+- **Chunk Size Control**: New `--ai-chunk-size` CLI parameter to override automatic chunk size calculation
+- **Model-Aware Token Limits**: Automatic detection of different AI model token limits with safety margins
+- **Result Combination**: Intelligent combination of results from multiple chunks into coherent final output
+
+### Enhanced
+- **AI Processor**: Enhanced with `tiktoken` dependency for accurate token counting
+- **Error Handling**: No more "context length exceeded" errors for large websites
+- **CLI Experience**: Better feedback when processing large content
+- **Documentation**: Updated with chunking examples and usage instructions
+
+### Technical Improvements
+- Added `tiktoken>=0.5.0` dependency for token counting
+- Enhanced `AIProcessor` class with chunking methods
+- Improved content splitting algorithms
+- Better context management across chunks
+- Enhanced result combination logic
+
+### Fixed
+- **Context Length Errors**: Resolves issues when parsing large websites that exceed AI model token limits
+- **Large Website Processing**: Now handles websites like parallel.ai with recursive crawling without token limit errors
+
 ## [0.5.1] - 2024-10-04
 
 ### Fixed
