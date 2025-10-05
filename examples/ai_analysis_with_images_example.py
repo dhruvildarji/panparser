@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-panparsex v0.3.0 - AI Analysis with Image Context Example
+panparsex v0.5.0 - AI Analysis with Image Context Example
 
-This example demonstrates how to use panparsex v0.3.0 with AI analysis
+This example demonstrates how to use panparsex v0.5.0 with AI analysis
 that includes image metadata and context for comprehensive document understanding.
 
 Requirements:
-- panparsex>=0.3.0
+- panparsex>=0.5.0
 - openai>=1.0.0
 - PyMuPDF (automatically installed with panparsex)
 - Pillow (automatically installed with panparsex)
@@ -53,7 +53,7 @@ def main():
         sys.exit(1)
     
     print("=" * 70)
-    print("panparsex v0.3.0 - AI Analysis with Image Context Example")
+    print("panparsex v0.5.0 - AI Analysis with Image Context Example")
     print("=" * 70)
     print(f"Processing: {pdf_file}")
     print(f"AI Model: GPT-4o-mini")

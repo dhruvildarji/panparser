@@ -192,7 +192,7 @@ result = processor.process_document(
 
 ## PDF Image Extraction
 
-panparsex v0.3.0 introduces comprehensive PDF image extraction capabilities that automatically detect, extract, and associate images with text content.
+panparsex v0.5.0 introduces comprehensive PDF image extraction capabilities that automatically detect, extract, and associate images with text content.
 
 ### Basic Image Extraction
 
@@ -568,6 +568,14 @@ pytest
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v0.5.0 (2024-10-04)
+- **🚫 Programming File Filtering**: Intelligent filtering of programming files during folder parsing
+- **📊 Parsing Summary**: Detailed statistics and reporting with ParsingSummary class
+- **🖥️ Enhanced CLI Output**: Rich summary display with emojis and formatting
+- **📁 Folder Processing**: Comprehensive folder parsing with file filtering
+- **🖼️ PDF Image Extraction**: Extract images from PDF documents with metadata
+- **🤖 AI-Powered Processing**: OpenAI GPT integration for content analysis
 
 ### v0.1.0 (2024-01-XX)
 - Initial release

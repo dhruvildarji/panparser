@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-panparsex v0.3.0 - PDF Image Extraction Example
+panparsex v0.5.0 - PDF Image Extraction Example
 
-This example demonstrates the new PDF image extraction capabilities in panparsex v0.3.0.
+This example demonstrates the PDF image extraction capabilities in panparsex v0.5.0.
 It shows how to extract images from PDF documents and analyze their metadata.
 
 Requirements:
-- panparsex>=0.3.0
+- panparsex>=0.5.0
 - PyMuPDF (automatically installed with panparsex)
 - Pillow (automatically installed with panparsex)
 
@@ -40,7 +40,7 @@ def main():
         sys.exit(1)
     
     print("=" * 60)
-    print("panparsex v0.3.0 - PDF Image Extraction Example")
+    print("panparsex v0.5.0 - PDF Image Extraction Example")
     print("=" * 60)
     print(f"Processing: {pdf_file}")
     print()

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-panparsex v0.3.0 - Batch PDF Processing with Image Extraction
+panparsex v0.5.0 - Batch PDF Processing with Image Extraction
 
 This example demonstrates batch processing of multiple PDF files with image extraction,
 showing how to efficiently process large collections of documents.
 
 Requirements:
-- panparsex>=0.3.0
+- panparsex>=0.5.0
 - PyMuPDF (automatically installed with panparsex)
 - Pillow (automatically installed with panparsex)
 
@@ -41,7 +41,7 @@ def main():
         sys.exit(1)
     
     print("=" * 70)
-    print("panparsex v0.3.0 - Batch PDF Processing with Image Extraction")
+    print("panparsex v0.5.0 - Batch PDF Processing with Image Extraction")
     print("=" * 70)
     print(f"Input Directory: {input_dir}")
     print()
