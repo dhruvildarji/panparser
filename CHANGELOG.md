@@ -455,7 +455,7 @@ unified_doc = parse_folder_unified(
 - Issues: https://github.com/dhruvildarji/panparsex/issues
 
 ### Contributors
-- Dhruvil Darji (dhruvil.darji@gmail.com) - Project creator and maintainer
+- Dhruvil Darji (dhruvildarji1409@gmail.com) - Project creator and maintainer
 
 ### Acknowledgments
 - Built with love for the open source community

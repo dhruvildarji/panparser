@@ -8,9 +8,22 @@ version = "0.5.2"
 description = "Universal, extensible parser for many file types and websites with a clean plugin architecture."
 readme = "README.md"
 requires-python = ">=3.9"
-license = {file = "LICENSE"}
 authors = [{name="Dhruvil Darji", email="dhruvil.darji@gmail.com"}]
 keywords = ["parser", "ingestion", "etl", "unstructured", "scraper", "crawler", "pdf", "html", "json", "yaml", "xml", "text"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
 dependencies = [
   "pydantic>=2.5.0",
   "tqdm>=4.66.0",
