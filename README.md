@@ -23,11 +23,16 @@
 ## Installation
 
 ```bash
-# Basic installation
+# Basic installation (recommended)
 pip install panparsex
 
 # With Selenium support for JavaScript-heavy websites
 pip install panparsex[selenium]
+
+# Install from source with all dependencies
+git clone https://github.com/dhruvildarji/panparsex.git
+cd panparsex
+pip install -r requirements.txt
 ```
 
 ## Quick Start
@@ -401,6 +406,41 @@ def process_directory(directory: str):
 results = process_directory("./documents")
 for result in results:
     print(f"{result['file']}: {result['sections']} sections, {result['content_length']} chars")
+```
+
+## Dependencies
+
+panparsex includes all necessary dependencies for full functionality:
+
+### Core Dependencies
+- `pydantic>=2.5.0` - Data validation and settings management
+- `tqdm>=4.66.0` - Progress bars for long operations
+
+### File Format Support
+- `beautifulsoup4>=4.12.0` + `lxml>=5.0.0` + `html5lib>=1.1.0` - HTML parsing
+- `requests>=2.31.0` - Web scraping
+- `pypdf>=3.0.0` + `pdfminer.six>=20221105` - PDF text extraction
+- `PyMuPDF>=1.23.0` + `Pillow>=9.0.0` - PDF image extraction
+- `python-docx>=0.8.11` - Microsoft Word documents
+- `openpyxl>=3.1.0` - Excel spreadsheets
+- `python-pptx>=0.6.21` - PowerPoint presentations
+- `PyYAML>=6.0.0` - YAML files
+- `markdown-it-py>=3.0.0` - Markdown processing
+- `chardet>=5.0.0` - Character encoding detection
+- `python-magic>=0.4.27` - File type detection
+
+### Optional Dependencies
+- `openai>=1.0.0` - AI-powered processing
+- `selenium>=4.0.0` + `webdriver-manager>=3.8.0` - JavaScript-heavy websites
+
+### Installation Options
+
+```bash
+# Full installation (recommended)
+pip install panparsex
+
+# Install from source
+pip install -r requirements.txt
 ```
 
 ## Configuration

@@ -29,23 +29,31 @@ This guide provides detailed installation instructions for panparsex on differen
 
 ### Dependencies
 
-panparsex automatically installs the following dependencies:
+panparsex has different dependency levels depending on your needs:
 
-- **pydantic** (>=2.5) - Data validation
-- **beautifulsoup4** (>=4.12) - HTML parsing
-- **lxml** (>=5.0) - XML processing
-- **html5lib** (>=1.1) - HTML5 parsing
-- **requests** (>=2.31) - HTTP requests
-- **tqdm** (>=4.66) - Progress bars
-- **markdown-it-py** (>=3.0) - Markdown parsing
-- **pypdf** (>=3.0) - PDF parsing
-- **pdfminer.six** (>=20221105) - PDF text extraction
-- **PyYAML** (>=6.0) - YAML parsing
-- **python-docx** (>=0.8.11) - Word document parsing
-- **openpyxl** (>=3.1.0) - Excel spreadsheet parsing
-- **python-pptx** (>=0.6.21) - PowerPoint parsing
-- **python-magic** (>=0.4.27) - File type detection
+#### Core Dependencies (Always Required)
+- **pydantic** (>=2.5) - Data validation and settings management
+- **tqdm** (>=4.66) - Progress bars for long operations
+
+#### File Format Support
+- **beautifulsoup4** (>=4.12) + **lxml** (>=5.0) + **html5lib** (>=1.1) - HTML parsing
+- **requests** (>=2.31) - Web scraping
+- **pypdf** (>=3.0) + **pdfminer.six** (>=20221105) - PDF text extraction
+- **PyMuPDF** (>=1.23) + **Pillow** (>=9.0) - PDF image extraction
+- **python-docx** (>=0.8.11) - Microsoft Word documents
+- **openpyxl** (>=3.1.0) - Excel spreadsheets
+- **python-pptx** (>=0.6.21) - PowerPoint presentations
+- **PyYAML** (>=6.0) - YAML files
+- **markdown-it-py** (>=3.0) - Markdown processing
 - **chardet** (>=5.0.0) - Character encoding detection
+- **python-magic** (>=0.4.27) - File type detection
+
+#### Optional Dependencies
+- **openai** (>=1.0.0) - AI-powered processing (optional)
+- **selenium** (>=4.0.0) + **webdriver-manager** (>=3.8.0) - JavaScript-heavy websites
+
+#### Requirements Files Available
+- `requirements.txt` - Full installation with all features
 
 ## Installation Methods
 
@@ -99,7 +107,19 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-### Method 4: Virtual Environment (Recommended for Development)
+### Method 4: Using Requirements Files
+
+#### Full Installation (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/dhruvildarji/panparsex.git
+cd panparsex
+
+# Install all dependencies
+pip install -r requirements.txt
+```
+
+### Method 5: Virtual Environment (Recommended for Development)
 
 ```bash
 # Create virtual environment
@@ -270,8 +290,7 @@ finally:
 ### Test with Sample Files
 
 ```bash
-# Download sample files (if available)
-# Test parsing
+# Test parsing with sample files
 panparsex parse examples/sample_files/sample.txt
 panparsex parse examples/sample_files/sample.json
 panparsex parse examples/sample_files/sample.html

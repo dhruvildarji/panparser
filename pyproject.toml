@@ -8,28 +8,28 @@ version = "0.5.0"
 description = "Universal, extensible parser for many file types and websites with a clean plugin architecture."
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = {file = "LICENSE"}
 authors = [{name="Dhruvil Darji", email="dhruvil.darji@gmail.com"}]
 keywords = ["parser", "ingestion", "etl", "unstructured", "scraper", "crawler", "pdf", "html", "json", "yaml", "xml", "text"]
 dependencies = [
-  "pydantic>=2.5",
-  "beautifulsoup4>=4.12",
-  "lxml>=5.0",
-  "html5lib>=1.1",
-  "requests>=2.31",
-  "tqdm>=4.66",
-  "markdown-it-py>=3.0",
-  "pypdf>=3.0",
+  "pydantic>=2.5.0",
+  "tqdm>=4.66.0",
+  "requests>=2.31.0",
+  "beautifulsoup4>=4.12.0",
+  "lxml>=5.0.0",
+  "html5lib>=1.1.0",
+  "pypdf>=3.0.0",
   "pdfminer.six>=20221105",
-  "PyYAML>=6.0",
+  "PyMuPDF>=1.23.0",
+  "Pillow>=9.0.0",
   "python-docx>=0.8.11",
   "openpyxl>=3.1.0",
   "python-pptx>=0.6.21",
-  "python-magic>=0.4.27",
+  "PyYAML>=6.0.0",
   "chardet>=5.0.0",
+  "markdown-it-py>=3.0.0",
+  "python-magic>=0.4.27",
   "openai>=1.0.0",
-  "Pillow>=9.0.0",
-  "PyMuPDF>=1.23.0",
 ]
 
 [project.urls]
